@@ -18,8 +18,9 @@ class ProjectController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'label' => 'required|string|max:255',
+            'tags' => 'nullable|array',
+            'tags.*' => 'string|max:255',
         ]);
 
         $project = Project::create($validated);
@@ -38,8 +39,9 @@ class ProjectController extends Controller
         $project = Project::findOrFail($id);
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'label' => 'required|string|max:255',
+            'tags' => 'nullable|array',
+            'tags.*' => 'string|max:255',
         ]);
 
         $project->update($validated);

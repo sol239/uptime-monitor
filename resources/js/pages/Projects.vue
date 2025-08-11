@@ -4,6 +4,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/vue3';
 import PlaceholderPattern from '../components/PlaceholderPattern.vue';
+import axios from 'axios';
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Projects', href: '/projects' },
@@ -18,6 +19,14 @@ const projects = ref<Array<any>>(page.props.projects || []);
 const labels = ref<Array<string>>([]);
 const filterLabel = ref('');
 const sortDirection = ref<'asc' | 'desc'>('asc');
+
+// Edit modal state
+const showEditModal = ref(false);
+const editingProject = ref<any>(null);
+const editForm = ref({
+  label: '',
+  tags: [] as string[]
+});
 
 // Extract unique labels from projects for filtering dropdown
 const labelSet = new Set<string>();
@@ -47,10 +56,42 @@ function sortByLabel(direction: 'asc' | 'desc') {
   sortDirection.value = direction;
 }
 
+function openEditModal(project: any) {
+  editingProject.value = project;
+  editForm.value = {
+    label: project.label,
+    tags: [...(project.tags || [])]
+  };
+  showEditModal.value = true;
+}
+
+function closeEditModal() {
+  showEditModal.value = false;
+  editingProject.value = null;
+  editForm.value = { label: '', tags: [] };
+}
+
+function updateProject() {
+  if (!editingProject.value) return;
+
+  axios.put(`/api/v1/projects/${editingProject.value.id}`, editForm.value)
+    .then(response => {
+      const index = projects.value.findIndex(p => p.id === editingProject.value.id);
+      if (index !== -1) {
+        projects.value[index] = response.data;
+      }
+      closeEditModal();
+    })
+    .catch(err => {
+      console.error('Failed to update project', err);
+    });
+}
+
 function deleteProject(id: number) {
-  axios.delete(`/api/projects/${id}`)
+  projects.value = projects.value.filter(p => p.id !== id);
+  axios.delete(`/api/v1/projects/${id}`)
     .then(() => {
-      projects.value = projects.value.filter(p => p.id !== id);
+      console.log("Project successfully deleted.")
     })
     .catch(err => {
       console.error('Failed to delete project', err);
@@ -124,6 +165,12 @@ function deleteProject(id: number) {
               </td>
               <td class="px-4 py-2">
                 <button
+                  @click="openEditModal(project)"
+                  class="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition mr-2"
+                >
+                  Edit
+                </button>
+                <button
                   @click="deleteProject(project.id)"
                   class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
                 >
@@ -142,6 +189,49 @@ function deleteProject(id: number) {
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Edit Modal -->
+      <div v-if="showEditModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+          <h3 class="text-lg font-semibold mb-4">Edit Project</h3>
+          
+          <div class="mb-4">
+            <label class="block text-sm font-medium mb-2">Label</label>
+            <input 
+              v-model="editForm.label"
+              type="text" 
+              class="w-full border rounded px-3 py-2"
+              required
+            />
+          </div>
+          
+          <div class="mb-6">
+            <label class="block text-sm font-medium mb-2">Tags (comma separated)</label>
+            <input 
+              :value="editForm.tags.join(', ')"
+              @input="editForm.tags = $event.target.value.split(',').map(t => t.trim()).filter(t => t)"
+              type="text" 
+              class="w-full border rounded px-3 py-2"
+              placeholder="tag1, tag2, tag3"
+            />
+          </div>
+          
+          <div class="flex justify-end gap-2">
+            <button 
+              @click="closeEditModal"
+              class="px-4 py-2 border rounded hover:bg-gray-100"
+            >
+              Cancel
+            </button>
+            <button 
+              @click="updateProject"
+              class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Update
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- TODO: Add Pagination Controls Here if needed -->

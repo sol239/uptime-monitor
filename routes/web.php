@@ -32,5 +32,16 @@ Route::get('projects/{project_id}', function ($project_id) {
 })->middleware(['auth', 'verified'])->name('project.show');
 
 
+Route::get('projects/{project_id}/monitors/{monitor_id}', function ($project_id, $monitor_id) {
+    $project = \App\Models\Project::findOrFail($project_id);
+    $monitor = $project->monitors()->findOrFail($monitor_id);
+
+    return Inertia::render('MonitorDetails', [
+        'project' => $project,
+        'monitor' => $monitor
+    ]);
+})->middleware(['auth', 'verified']);
+
 require __DIR__.'/settings.php';
+require __DIR__.'/auth.php';
 require __DIR__.'/auth.php';
