@@ -20,6 +20,11 @@ Route::get('projects', function () {
 
 Route::get('projects/{project_id}', function ($project_id) {
     $project = Project::findOrFail($project_id);
+
+    if ($project->user_id !== Auth::id()) {
+        abort(403, 'Unauthorized');
+    }
+
     $monitors = $project->monitors;
 
     // Add debugging
@@ -34,6 +39,12 @@ Route::get('projects/{project_id}', function ($project_id) {
 
 Route::get('projects/{project_id}/monitors/{monitor_id}', function ($project_id, $monitor_id) {
     $project = \App\Models\Project::findOrFail($project_id);
+
+    // Check ownership
+    if ($project->user_id !== Auth::id()) {
+        abort(403, 'Unauthorized');
+    }
+
     $monitor = $project->monitors()->findOrFail($monitor_id);
 
     return Inertia::render('MonitorDetails', [
@@ -41,6 +52,7 @@ Route::get('projects/{project_id}/monitors/{monitor_id}', function ($project_id,
         'monitor' => $monitor
     ]);
 })->middleware(['auth', 'verified']);
+
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

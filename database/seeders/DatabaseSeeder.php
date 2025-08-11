@@ -51,7 +51,7 @@ class DatabaseSeeder extends Seeder
         // Create specific monitors for project 1
         Monitor::factory()->create([
             'project_id' => $project1->id,
-            'type' => 'ping',
+            'monitor_type' => 'ping',
             'label' => 'Database Server Health',
             'hostname' => 'httpbin.org',
             'port' => 80,
@@ -63,7 +63,7 @@ class DatabaseSeeder extends Seeder
 
         Monitor::factory()->create([
             'project_id' => $project1->id,
-            'type' => 'website',
+            'monitor_type' => 'website',
             'label' => 'Task Assignment Availability',
             'url' => 'https://webik.ms.mff.cuni.cz/nswi153/seminar-project/',
             'check_status' => true,
@@ -74,7 +74,7 @@ class DatabaseSeeder extends Seeder
         // Create monitors for project 2
         Monitor::factory()->create([
             'project_id' => $project2->id,
-            'type' => 'ping',
+            'monitor_type' => 'ping',
             'label' => 'Redis Cache Server',
             'hostname' => 'httpbin.org',
             'port' => 443,
@@ -86,7 +86,7 @@ class DatabaseSeeder extends Seeder
 
         Monitor::factory()->create([
             'project_id' => $project2->id,
-            'type' => 'website',
+            'monitor_type' => 'website',
             'label' => 'SIS UK',
             'url' => 'https://is.cuni.cz/studium/index.php',
             'check_status' => true,
@@ -96,7 +96,7 @@ class DatabaseSeeder extends Seeder
 
         Monitor::factory()->create([
             'project_id' => $project2->id,
-            'type' => 'website',
+            'monitor_type' => 'website',
             'label' => 'Seznam.cz',
             'url' => 'https://www.seznam.cz/',
             'check_status' => true,
@@ -107,7 +107,7 @@ class DatabaseSeeder extends Seeder
         // Create 1 monitor for project 3
         Monitor::factory()->create([
             'project_id' => $project3->id,
-            'type' => 'ping',
+            'monitor_type' => 'ping',
             'label' => 'Json Placeholder',
             'hostname' => 'jsonplaceholder.typicode.com',
             'port' => 443,
@@ -127,7 +127,7 @@ class DatabaseSeeder extends Seeder
         // Create monitors for Shadow Libraries project
         Monitor::factory()->create([
             'project_id' => $project4->id,
-            'type' => 'website',
+            'monitor_type' => 'website',
             'label' => 'LibGen Availability',
             'url' => 'https://www.libgen.is/',
             'check_status' => true,
@@ -139,7 +139,7 @@ class DatabaseSeeder extends Seeder
 
         Monitor::factory()->create([
             'project_id' => $project4->id,
-            'type' => 'website',
+            'monitor_type' => 'website',
             'label' => 'Anna\'s Archive Status',
             'url' => 'https://annas-archive.org/',
             'check_status' => true,
@@ -151,7 +151,7 @@ class DatabaseSeeder extends Seeder
 
         Monitor::factory()->create([
             'project_id' => $project4->id,
-            'type' => 'website',
+            'monitor_type' => 'website',
             'label' => 'Z-Library Health',
             'url' => 'https://z-library.sk/',
             'check_status' => true,

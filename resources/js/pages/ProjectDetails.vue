@@ -129,15 +129,15 @@ function resetMonitorForm() {
 function openEditForm(monitor: any) {
   editingMonitor.value = monitor;
   monitorLabel.value = monitor.label;
-  monitorType.value = monitor.type;
+  monitorType.value = monitor.monitor_type;
   monitorPeriodicity.value = monitor.periodicity;
   monitorBadgeLabel.value = monitor.badge_label || '';
   monitorStatus.value = monitor.status;
 
-  if (monitor.type === 'ping') {
+  if (monitor.monitor_type === 'ping') {
     monitorHostname.value = monitor.hostname || '';
     monitorPort.value = monitor.port;
-  } else if (monitor.type === 'website') {
+  } else if (monitor.monitor_type === 'website') {
     monitorUrl.value = monitor.url || '';
     monitorCheckStatus.value = monitor.check_status || false;
     monitorKeywords.value = (monitor.keywords || []).join(', ');
@@ -194,7 +194,7 @@ function cancelEdit() {
 const filteredMonitors = computed(() => {
   return monitors.value.filter(m => {
     const labelMatch = !filterLabel.value || m.label.includes(filterLabel.value);
-    const typeMatch = !filterType.value || m.type === filterType.value;
+    const typeMatch = !filterType.value || m.monitor_type === filterType.value;
     const statusMatch = !filterStatus.value || m.latest_status === filterStatus.value;
     return labelMatch && typeMatch && statusMatch;
   });
@@ -209,7 +209,7 @@ const totalPages = computed(() => Math.ceil(filteredMonitors.value.length / page
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Projects', href: '/projects' },
-  { title: `Project ${project.id}`, href: `/projects/${project.id}` },
+  { title: `${project.label}`, href: `/projects/${project.id}` },
 ];
 
 function goToMonitorDetails(monitorId: number) {
@@ -510,8 +510,8 @@ function goToMonitorDetails(monitorId: number) {
             </select>
             <select v-model="filterStatus" class="px-2 py-1 rounded border bg-gray-50 dark:bg-zinc-900">
               <option value="">All Statuses</option>
-              <option value="up">Up</option>
-              <option value="down">Down</option>
+              <option value="succeeded">Succeeded</option>
+              <option value="failed">Failed</option>
             </select>
           </div>
 
@@ -530,11 +530,11 @@ function goToMonitorDetails(monitorId: number) {
               <tbody>
                 <tr v-for="monitor in paginatedMonitors" :key="monitor.id">
                   <td class="px-4 py-2">{{ monitor.label }}</td>
-                  <td class="px-4 py-2">{{ monitor.type.charAt(0).toUpperCase() + monitor.type.slice(1) }}</td>
+                  <td class="px-4 py-2">{{ monitor.monitor_type.charAt(0).toUpperCase() + monitor.monitor_type.slice(1) }}</td>
                   <td class="px-4 py-2">
-                    <span v-if="monitor.latest_status === 'up' || monitor.latest_status === 'succeeded'"
-                      class="inline-block bg-emerald-600 text-white text-xs rounded px-2 py-1">Up</span>
-                    <span v-else class="inline-block bg-red-600 text-white text-xs rounded px-2 py-1">Down</span>
+                    <span v-if="monitor.latest_status === 'succeeded'"
+                      class="inline-block bg-emerald-600 text-white text-xs rounded px-2 py-1">Succeeded</span>
+                    <span v-else class="inline-block bg-red-600 text-white text-xs rounded px-2 py-1">Failed</span>
                   </td>
                   <td class="px-4 py-2">
                     <button @click="openEditForm(monitor)"

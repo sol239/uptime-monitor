@@ -40,7 +40,7 @@ import { Head, Link } from '@inertiajs/vue3';
                     status and performance of websites or servers, similar to popular tools like UptimeRobot. Users can
                     set up
                     different types of monitors, including ping checks and HTTP/HTTPS website checks, with customizable
-                    intervals ranging from 5 to 300 seconds. The service tracks the success or failure of each
+                    intervals ranging from 5 to 300 seconds. The service tracks whether each monitoring task has succeeded or failed,
                     monitoring task,
                     records response times, and provides detailed history views with live updates in list, calendar, and
                     graph

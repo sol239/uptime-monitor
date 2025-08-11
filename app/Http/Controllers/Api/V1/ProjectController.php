@@ -13,6 +13,8 @@ namespace App\Http\Controllers\Api\V1;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class ProjectController extends Controller
 {
@@ -57,11 +59,17 @@ class ProjectController extends Controller
     // POST /api/projects
     public function store(Request $request)
     {
+        // T
         $validated = $request->validate([
             'label' => 'required|string|max:255',
+            'description' => 'nullable|string',
             'tags' => 'nullable|array',
             'tags.*' => 'string|max:255',
+            'user_id' => 'required|integer', // Ensure user_id is present in request
         ]);
+
+        // Log validated array in the requested format
+        Log::info($validated);
 
         $project = Project::create($validated);
         return response()->json($project, 201);
@@ -143,6 +151,7 @@ class ProjectController extends Controller
     // PUT/PATCH /api/projects/{id}
     public function update(Request $request, $id)
     {
+    
         $project = Project::findOrFail($id);
 
         $validated = $request->validate([
@@ -151,6 +160,7 @@ class ProjectController extends Controller
             'tags.*' => 'string|max:255',
         ]);
 
+        Log::info("Project [ID:" . $project->id . "]" . " updated.", $validated);
         $project->update($validated);
         return response()->json($project);
     }
@@ -179,3 +189,4 @@ class ProjectController extends Controller
         return response()->json(null, 204);
     }
 }
+    

@@ -16,8 +16,8 @@ const user = computed(() => auth.value.user || null);
 
 // Projects state
 const projects = ref<Array<any>>(page.props.projects || []);
-const labels = ref<Array<string>>([]);
 const filterLabel = ref('');
+const filterTags = ref('');
 const sortDirection = ref<'asc' | 'desc'>('asc');
 
 // Edit modal state
@@ -28,19 +28,32 @@ const editForm = ref({
   tags: [] as string[]
 });
 
-// Extract unique labels from projects for filtering dropdown
-const labelSet = new Set<string>();
-projects.value.forEach((p) => {
-  if (p.label) labelSet.add(p.label);
+// Create Project form state
+const showProjectForm = ref(false);
+const form = ref({
+  label: '',
+  description: '',
+  tags: [] as string[]
 });
-labels.value = Array.from(labelSet);
+const tagsInput = ref('');
+const saveSuccess = ref(false);
 
 // Computed filtered and sorted projects
 const filteredProjects = computed(() => {
   let filtered = projects.value;
 
   if (filterLabel.value) {
-    filtered = filtered.filter((p) => p.label === filterLabel.value);
+    filtered = filtered.filter((p) => 
+      p.label && p.label.toLowerCase().includes(filterLabel.value.toLowerCase())
+    );
+  }
+
+  if (filterTags.value) {
+    filtered = filtered.filter((p) => 
+      p.tags && p.tags.some((tag: string) => 
+        tag.toLowerCase().includes(filterTags.value.toLowerCase())
+      )
+    );
   }
 
   filtered = filtered.sort((a, b) => {
@@ -97,6 +110,34 @@ function deleteProject(id: number) {
       console.error('Failed to delete project', err);
     });
 }
+
+// Save project handler
+function save() {
+  form.value.tags = tagsInput.value.split(',').map(t => t.trim()).filter(Boolean);
+  console.log("USER:", user.value)
+  axios.post('/api/v1/projects', {
+    label: form.value.label,
+    description: form.value.description,
+    tags: form.value.tags,
+    user_id: user.value?.id // <-- Added user id to payload
+  })
+    .then(response => {
+      projects.value.push(response.data);
+      // Update labels list if new label
+      if (response.data.label && !labels.value.includes(response.data.label)) {
+        labels.value.push(response.data.label);
+      }
+      saveSuccess.value = true;
+      showProjectForm.value = false;
+      // Reset form
+      form.value = { label: '', description: '', tags: [] };
+      tagsInput.value = '';
+    })
+    .catch(error => {
+      console.error('Failed to create project:', error);
+      // Optionally show error to user
+    });
+}
 </script>
 
 <template>
@@ -107,38 +148,56 @@ function deleteProject(id: number) {
       <div class="flex flex-col gap-4 mb-6">
         <div class="flex justify-between items-center">
           <h2 class="text-2xl font-bold">Projects</h2>
-          <!-- TODO: Open modal to create project -->
+          <!-- Open modal to create project -->
           <button
             class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
+            @click="showProjectForm = true"
           >
             Create Project
           </button>
         </div>
 
-        <div class="flex flex-wrap gap-4 items-center">
-          <div>
-            <label class="text-sm font-medium">Label:</label>
-            <select v-model="filterLabel" class="border rounded px-2 py-1">
-              <option value="">All</option>
-              <option v-for="label in labels" :key="label" :value="label">{{ label }}</option>
-            </select>
-          </div>
+        <!-- Collapsible Project Form -->
+        <div v-if="showProjectForm" class="p-4 border rounded-lg bg-emerald-50 dark:bg-emerald-900/20">
+          <h3 class="text-lg font-semibold mb-4">Create Project</h3>
+          <form @submit.prevent="save">
+            <div class="mb-4">
+              <label class="block text-sm font-semibold mb-1">Label</label>
+              <input type="text" v-model="form.label"
+                class="w-full px-3 py-2 rounded border bg-gray-50 dark:bg-zinc-900" />
+            </div>
+            <div class="mb-4">
+              <label class="block text-sm font-semibold mb-1">Description</label>
+              <textarea v-model="form.description"
+                class="w-full px-3 py-2 rounded border bg-gray-50 dark:bg-zinc-900" rows="3"></textarea>
+            </div>
+            <div class="mb-4">
+              <label class="block text-sm font-semibold mb-1">Tags</label>
+              <input type="text" v-model="tagsInput" placeholder="Comma separated"
+                class="w-full px-3 py-2 rounded border bg-gray-50 dark:bg-zinc-900" />
+              <div class="mt-2 flex flex-wrap gap-2">
+                <span v-for="tag in form.tags" :key="tag"
+                  class="inline-block bg-[#262626] text-xs rounded px-2 py-1">{{ tag }}</span>
+              </div>
+            </div>
+            <div class="flex justify-end gap-2">
+              <button type="button" @click="showProjectForm = false"
+                class="px-4 py-2 border rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                Cancel
+              </button>
+              <button type="submit"
+                class="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition">
+                Save Project
+              </button>
+            </div>
+          </form>
+        </div>
 
-          <div>
-            <label class="text-sm font-medium">Sort by Label:</label>
-            <button
-              @click="sortByLabel('asc')"
-              class="px-2 py-1 border rounded hover:bg-gray-100"
-            >
-              Asc
-            </button>
-            <button
-              @click="sortByLabel('desc')"
-              class="px-2 py-1 border rounded hover:bg-gray-100"
-            >
-              Desc
-            </button>
-          </div>
+        <div class="mb-4 flex gap-4 flex-wrap">
+          <input type="text" v-model="filterLabel" placeholder="Filter by label"
+            class="px-2 py-1 rounded border bg-gray-50 dark:bg-zinc-900" />
+          <input type="text" v-model="filterTags" placeholder="Filter by tags"
+            class="px-2 py-1 rounded border bg-gray-50 dark:bg-zinc-900" />
         </div>
       </div>
 
@@ -146,7 +205,27 @@ function deleteProject(id: number) {
         <table class="min-w-full divide-y divide-gray-200">
           <thead>
             <tr>
-              <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">Label</th>
+              <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">
+                <div class="flex items-center gap-2">
+                  Label
+                  <div class="flex flex-col">
+                    <button
+                      @click="sortByLabel('asc')"
+                      class="text-gray-400 hover:text-gray-600 text-[10px] leading-none"
+                      :class="{ 'text-blue-500': sortDirection === 'asc' }"
+                    >
+                      ▲
+                    </button>
+                    <button
+                      @click="sortByLabel('desc')"
+                      class="text-gray-400 hover:text-gray-600 text-[10px] leading-none"
+                      :class="{ 'text-blue-500': sortDirection === 'desc' }"
+                    >
+                      ▼
+                    </button>
+                  </div>
+                </div>
+              </th>
               <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">Tags</th>
               <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">Actions</th>
             </tr>

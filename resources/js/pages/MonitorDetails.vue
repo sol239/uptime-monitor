@@ -15,7 +15,7 @@ const showMonitorForm = ref(false);
 const form = ref({
   label: monitor.value.label,
   periodicity: monitor.value.periodicity,
-  type: monitor.value.type,
+  type: monitor.value.monitor_type,
   badge_label: monitor.value.badge_label || '',
   status: monitor.value.status,
   hostname: monitor.value.hostname || '',
@@ -40,14 +40,14 @@ function saveMonitor() {
   const payload: any = {
     label: form.value.label,
     periodicity: form.value.periodicity,
-    type: form.value.type,
+    type: form.value.monitor_type,
     badge_label: form.value.badge_label,
     status: form.value.status,
   };
-  if (form.value.type === 'ping') {
+  if (form.value.monitor_type === 'ping') {
     payload.hostname = form.value.hostname;
     payload.port = form.value.port;
-  } else if (form.value.type === 'website') {
+  } else if (form.value.monitor_type === 'website') {
     payload.url = form.value.url;
     payload.check_status = form.value.check_status;
     payload.keywords = form.value.keywords.split(',').map(k => k.trim()).filter(Boolean);
@@ -137,13 +137,13 @@ const calendarData = computed(() => {
   logsData.value.forEach(log => {
     const date = log.started_at.split('T')[0]; // Extract YYYY-MM-DD
     if (!data[date]) {
-      data[date] = { total: 0, failed: 0, success: 0 };
+      data[date] = { total: 0, failed: 0, succeeded: 0 };
     }
     data[date].total++;
-    if (log.status === 'fail') {
+    if (log.status === 'failed') {
       data[date].failed++;
-    } else if (log.status === 'success') {
-      data[date].success++;
+    } else if (log.status === 'succeeded') {
+      data[date].succeeded++;
     }
   });
   return data;
@@ -339,7 +339,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                 </div>
                 <div class="mb-3">
                   <span class="text-sm font-semibold text-gray-300">Type:</span>
-                  <p class="text-lg">{{ monitor.type }}</p>
+                  <p class="text-lg">{{ monitor.monitor_type }}</p>
                 </div>
                 <div class="mb-3">
                   <span class="text-sm font-semibold text-gray-300">Periodicity:</span>
@@ -353,13 +353,13 @@ const breadcrumbs: BreadcrumbItem[] = [
                   <span class="text-sm font-semibold text-gray-300">Status:</span>
                   <p class="text-lg">{{ monitor.status }}</p>
                 </div>
-                <div v-if="monitor.type === 'ping'" class="mb-3">
+                <div v-if="monitor.monitor_type === 'ping'" class="mb-3">
                   <span class="text-sm font-semibold text-gray-300">Hostname:</span>
                   <p class="text-lg">{{ monitor.hostname }}</p>
                   <span class="text-sm font-semibold text-gray-300">Port:</span>
                   <p class="text-lg">{{ monitor.port }}</p>
                 </div>
-                <div v-if="monitor.type === 'website'" class="mb-3">
+                <div v-if="monitor.monitor_type === 'website'" class="mb-3">
                   <span class="text-sm font-semibold text-gray-300">URL:</span>
                   <p class="text-lg">{{ monitor.url }}</p>
                   <span class="text-sm font-semibold text-gray-300">Check Status:</span>
@@ -385,7 +385,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                   </div>
                   <div class="mb-4">
                     <label class="block text-sm font-semibold mb-1">Type</label>
-                    <select v-model="form.type" class="w-full px-3 py-2 rounded border bg-gray-50 dark:bg-zinc-900">
+                    <select v-model="form.monitor_type" class="w-full px-3 py-2 rounded border bg-gray-50 dark:bg-zinc-900">
                       <option value="ping">Ping Monitor</option>
                       <option value="website">Website Monitor</option>
                     </select>
@@ -414,7 +414,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                     </select>
                   </div>
                   <!-- Ping Monitor Specific Fields -->
-                  <div v-if="form.type === 'ping'"
+                  <div v-if="form.monitor_type === 'ping'"
                     class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                     <div>
                       <label class="block text-sm font-medium mb-1">Hostname or IP Address</label>
@@ -428,7 +428,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                     </div>
                   </div>
                   <!-- Website Monitor Specific Fields -->
-                  <div v-if="form.type === 'website'"
+                  <div v-if="form.monitor_type === 'website'"
                     class="grid grid-cols-1 gap-4 mb-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                     <div>
                       <label class="block text-sm font-medium mb-1">URL</label>
@@ -484,7 +484,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                     <label class="block text-xs font-semibold mb-1">Status</label>
                     <select v-model="listFilters.status" class="px-2 py-1 rounded border bg-gray-50 dark:bg-zinc-900">
                       <option value="">All</option>
-                      <option value="success">Success</option>
+                      <option value="succeeded">Succeeded</option>
                       <option value="failed">Failed</option>
                     </select>
                   </div>
@@ -518,8 +518,8 @@ const breadcrumbs: BreadcrumbItem[] = [
                       <tr v-for="item in paginatedListHistory" :key="item.id">
                         <td class="px-4 py-2">{{ formatDateTime(item.started_at) }}</td>
                         <td class="px-4 py-2">
-                          <span v-if="item.status === 'success'"
-                            class="inline-block bg-emerald-600 text-white text-xs rounded px-2 py-1">Success</span>
+                          <span v-if="item.status === 'succeeded'"
+                            class="inline-block bg-emerald-600 text-white text-xs rounded px-2 py-1">Succeeded</span>
                           <span v-else class="inline-block bg-red-600 text-white text-xs rounded px-2 py-1">Failed</span>
                         </td>
                         <td class="px-4 py-2">{{ item.response_time_ms }}</td>

@@ -704,7 +704,7 @@
                         "minimum": 5,
                         "example": 60
                     },
-                    "type": {
+                    "monitor_type": {
                         "type": "string",
                         "example": "ping"
                     },

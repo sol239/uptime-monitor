@@ -58,7 +58,7 @@ class MonitorChecker
 
     private function loadMonitors(string $type)
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM monitors WHERE type = :type");
+        $stmt = $this->pdo->prepare("SELECT * FROM monitors WHERE monitor_type = :type");
         $stmt->execute(['type' => $type]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -93,10 +93,10 @@ class MonitorChecker
 
         if ($connection) {
             fclose($connection);
-            $status = 'success';
+            $status = 'succeeded';
             //echo "Connection successful! Response time: {$responseTime} ms\n";
         } else {
-            $status = 'fail';
+            $status = 'failed';
             //echo "Connection failed: {$errstr} ({$errno})\n";
         }
 
@@ -123,12 +123,15 @@ class MonitorChecker
         $checkStatus = !empty($websiteMonitor['check_status']) && $websiteMonitor['check_status'];
         $keywords = [];
         if (!empty($websiteMonitor['keywords'])) {
-            // Assume keywords stored as comma-separated string
-            $keywords = array_map('trim', explode(',', $websiteMonitor['keywords']));
+            // Keywords are stored as JSON array, decode them
+            $keywords = json_decode($websiteMonitor['keywords'], true);
+            if (!is_array($keywords)) {
+                $keywords = [];
+            }
         }
 
         $start = microtime(true);
-        $status = 'success';
+        $status = 'succeeded';
         $responseTime = null;
         $httpCode = null;
         $missingKeywords = [];
@@ -142,25 +145,28 @@ class MonitorChecker
         $response = curl_exec($ch);
         $responseTime = round((microtime(true) - $start) * 1000); // ms
 
+        // page content
         if ($response === false) {
-            $status = 'fail';
+            $status = 'failed';
             $error = curl_error($ch);
             echo "Website connection failed: {$error}\n";
         } else {
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             echo "Website connection successful! HTTP status: {$httpCode}, Response time: {$responseTime} ms\n";
             if ($checkStatus && ($httpCode < 200 || $httpCode >= 300)) {
-                $status = 'fail';
+                $status = 'failed';
                 echo "Status code check failed.\n";
             }
-            if ($status === 'success' && $keywords) {
+            if ($status === 'succeeded' && $keywords) {
                 foreach ($keywords as $keyword) {
-                    if (!empty($keyword) && strpos($response, $keyword) === false) {
+                    $pos = strpos($response, $keyword);
+                    //echo "Checking for keyword: {$keyword} - Position: {$pos}\n";
+                    if (!empty($keyword) && $pos === false) {
                         $missingKeywords[] = $keyword;
                     }
                 }
                 if ($missingKeywords) {
-                    $status = 'fail';
+                    $status = 'failed';
                     echo "Missing keywords: " . implode(', ', $missingKeywords) . "\n";
                 }
             }
@@ -249,7 +255,6 @@ class MonitorChecker
     public function runChecks(): void
     {
 
-        // TODO: THIS METHOD WILL RUN IN LOOP
         while (true) {
             $currentTime = time();
             foreach ($this->monitorNextChecks as $index => $monitorCheck) {
@@ -258,9 +263,9 @@ class MonitorChecker
                     $monitor = $monitorCheck['monitor'];
                     echo "Running check for monitor ID {$monitor['id']} at " . date('Y-m-d H:i:s') . "\n";
                     
-                    if ($monitor['type'] === 'ping') {
+                    if ($monitor['monitor_type'] === 'ping') {
                         $this->runPingMonitorCheck($monitor);
-                    } elseif ($monitor['type'] === 'website') {
+                    } elseif ($monitor['monitor_type'] === 'website') {
                         $this->runWebsiteMonitorCheck($monitor);
                     }
                     
