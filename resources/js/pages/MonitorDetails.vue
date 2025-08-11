@@ -3,6 +3,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
+import { type BreadcrumbItem } from '@/types';
 
 const page = usePage();
 const monitor = ref(page.props.monitor);
@@ -100,7 +101,7 @@ const listFilters = ref({
   startDate: '',
   endDate: '',
   page: 1,
-  perPage: 20,
+  perPage: 10,
 });
 
 const filteredListHistory = computed(() => {
@@ -272,7 +273,7 @@ const calendarSvgRects = computed(() => {
       const rate = (day.summary.total - day.summary.failed) / day.summary.total;
       percent = (rate * 100).toFixed(3) + '%';
       if (day.summary.failed === 0) {
-        fill = '#3bd671'; // green
+        fill = '#3bd671'; // green{ title: `Project ${project.id}`, href: `/projects/${project.id}`
         fillOpacity = 1;
       } else if (rate >= 0.95) {
         fill = '#f29030'; // orange
@@ -295,12 +296,17 @@ const calendarSvgRects = computed(() => {
   return rects;
 });
 
+const breadcrumbs: BreadcrumbItem[] = [
+  { title: 'Projects', href: '/projects' },
+  { title: `Project ${project.id}`, href: `/projects/${project.id}` },
+  { title: 'Monitor Details', href: '#' }
+];
+
 </script>
 
 <template>
-
   <Head :title="`Monitor Details - ${form.label}`" />
-  <AppLayout>
+  <AppLayout :breadcrumbs="breadcrumbs">
     <div class="min-h-screen flex items-center justify-center">
       <main class="flex-grow flex items-center justify-center">
         <div class="bg-white dark:bg-[#121212] rounded-xl shadow-lg max-w-4xl w-full p-10"
@@ -312,316 +318,317 @@ const calendarSvgRects = computed(() => {
             Saved successfully!
           </div>
 
-          <!-- Monitor Info Section -->
-          <div class="mb-8">
-            <div class="flex justify-between items-center mb-4">
-              <h2 class="text-xl font-bold">Monitor Information</h2>
-              <button @click="showMonitorForm = !showMonitorForm"
-                class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
-                {{ showMonitorForm ? 'Cancel' : 'Edit Monitor' }}
-              </button>
-            </div>
+          <!-- Info + History side by side -->
+          <div class="flex flex-col md:flex-row gap-8 mb-8">
+            <!-- Monitor Info Section -->
+            <div class="flex-1">
+              <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Monitor Information</h2>
+                <button @click="showMonitorForm = !showMonitorForm"
+                  class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                  {{ showMonitorForm ? 'Cancel' : 'Edit Monitor' }}
+                </button>
+              </div>
 
-            <!-- Info Display -->
-            <div v-if="!showMonitorForm" class="p-4 border rounded-lg"
-              :style="{ background: '#171717', color: '#fff', borderColor: 'white' }">
-              <div class="mb-3">
-                <span class="text-sm font-semibold text-gray-300">Label:</span>
-                <p class="text-lg">{{ monitor.label || 'No label set' }}</p>
-              </div>
-              <div class="mb-3">
-                <span class="text-sm font-semibold text-gray-300">Type:</span>
-                <p class="text-lg">{{ monitor.type }}</p>
-              </div>
-              <div class="mb-3">
-                <span class="text-sm font-semibold text-gray-300">Periodicity:</span>
-                <p class="text-lg">{{ monitor.periodicity }}s</p>
-              </div>
-              <div class="mb-3">
-                <span class="text-sm font-semibold text-gray-300">Badge Label:</span>
-                <p class="text-lg">{{ monitor.badge_label }}</p>
-              </div>
-              <div class="mb-3">
-                <span class="text-sm font-semibold text-gray-300">Status:</span>
-                <p class="text-lg">{{ monitor.status }}</p>
-              </div>
-              <div v-if="monitor.type === 'ping'" class="mb-3">
-                <span class="text-sm font-semibold text-gray-300">Hostname:</span>
-                <p class="text-lg">{{ monitor.hostname }}</p>
-                <span class="text-sm font-semibold text-gray-300">Port:</span>
-                <p class="text-lg">{{ monitor.port }}</p>
-              </div>
-              <div v-if="monitor.type === 'website'" class="mb-3">
-                <span class="text-sm font-semibold text-gray-300">URL:</span>
-                <p class="text-lg">{{ monitor.url }}</p>
-                <span class="text-sm font-semibold text-gray-300">Check Status:</span>
-                <p class="text-lg">{{ monitor.check_status ? 'Yes' : 'No' }}</p>
-                <span class="text-sm font-semibold text-gray-300">Keywords:</span>
-                <div class="mt-2 flex flex-wrap gap-2">
-                  <span v-for="kw in monitor.keywords" :key="kw"
-                    class="inline-block bg-[#262626] text-xs rounded px-2 py-1 text-white">{{ kw }}</span>
-                  <span v-if="!monitor.keywords || monitor.keywords.length === 0" class="text-gray-400 text-sm">No
-                    keywords set</span>
+              <!-- Info Display -->
+              <div v-if="!showMonitorForm" class="p-4 border rounded-lg"
+                :style="{ background: '#171717', color: '#fff', borderColor: 'white' }">
+                <div class="mb-3">
+                  <span class="text-sm font-semibold text-gray-300">Label:</span>
+                  <p class="text-lg">{{ monitor.label || 'No label set' }}</p>
+                </div>
+                <div class="mb-3">
+                  <span class="text-sm font-semibold text-gray-300">Type:</span>
+                  <p class="text-lg">{{ monitor.type }}</p>
+                </div>
+                <div class="mb-3">
+                  <span class="text-sm font-semibold text-gray-300">Periodicity:</span>
+                  <p class="text-lg">{{ monitor.periodicity }}s</p>
+                </div>
+                <div class="mb-3">
+                  <span class="text-sm font-semibold text-gray-300">Badge Label:</span>
+                  <p class="text-lg">{{ monitor.badge_label }}</p>
+                </div>
+                <div class="mb-3">
+                  <span class="text-sm font-semibold text-gray-300">Status:</span>
+                  <p class="text-lg">{{ monitor.status }}</p>
+                </div>
+                <div v-if="monitor.type === 'ping'" class="mb-3">
+                  <span class="text-sm font-semibold text-gray-300">Hostname:</span>
+                  <p class="text-lg">{{ monitor.hostname }}</p>
+                  <span class="text-sm font-semibold text-gray-300">Port:</span>
+                  <p class="text-lg">{{ monitor.port }}</p>
+                </div>
+                <div v-if="monitor.type === 'website'" class="mb-3">
+                  <span class="text-sm font-semibold text-gray-300">URL:</span>
+                  <p class="text-lg">{{ monitor.url }}</p>
+                  <span class="text-sm font-semibold text-gray-300">Check Status:</span>
+                  <p class="text-lg">{{ monitor.check_status ? 'Yes' : 'No' }}</p>
+                  <span class="text-sm font-semibold text-gray-300">Keywords:</span>
+                  <div class="mt-2 flex flex-wrap gap-2">
+                    <span v-for="kw in monitor.keywords" :key="kw"
+                      class="inline-block bg-[#262626] text-xs rounded px-2 py-1 text-white">{{ kw }}</span>
+                    <span v-if="!monitor.keywords || monitor.keywords.length === 0" class="text-gray-400 text-sm">No
+                      keywords set</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <!-- Collapsible Monitor Form -->
-            <div v-if="showMonitorForm" class="p-4 border rounded-lg bg-blue-50 dark:bg-blue-900/20">
-              <h3 class="text-lg font-semibold mb-4">Edit Monitor Information</h3>
-              <form @submit.prevent="saveMonitor">
-                <div class="mb-4">
-                  <label class="block text-sm font-semibold mb-1">Label</label>
-                  <input type="text" v-model="form.label"
-                    class="w-full px-3 py-2 rounded border bg-gray-50 dark:bg-zinc-900" />
-                </div>
-                <div class="mb-4">
-                  <label class="block text-sm font-semibold mb-1">Type</label>
-                  <select v-model="form.type" class="w-full px-3 py-2 rounded border bg-gray-50 dark:bg-zinc-900">
-                    <option value="ping">Ping Monitor</option>
-                    <option value="website">Website Monitor</option>
-                  </select>
-                </div>
-                <div class="mb-4">
-                  <label class="block text-sm font-semibold mb-1">Periodicity (seconds)</label>
-                  <input type="number" v-model.number="form.periodicity" placeholder="60" min="5" max="300"
-                    class="w-full px-3 py-2 rounded border bg-gray-50 dark:bg-zinc-900" :class="form.periodicity && (form.periodicity < 5 || form.periodicity > 300)
-                      ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
-                      : ''" />
-                  <small v-if="form.periodicity && (form.periodicity < 5 || form.periodicity > 300)"
-                    class="text-red-500 text-xs">
-                    Periodicity must be between 5 and 300 seconds
-                  </small>
-                </div>
-                <div class="mb-4">
-                  <label class="block text-sm font-semibold mb-1">Badge Label</label>
-                  <input type="text" v-model="form.badge_label" placeholder="Badge label"
-                    class="w-full px-3 py-2 rounded border bg-gray-50 dark:bg-zinc-900" />
-                </div>
-                <div class="mb-4">
-                  <label class="block text-sm font-semibold mb-1">Status</label>
-                  <select v-model="form.status" class="w-full px-3 py-2 rounded border bg-gray-50 dark:bg-zinc-900">
-                    <option value="succeeded">Succeeded</option>
-                    <option value="failed">Failed</option>
-                  </select>
-                </div>
-                <!-- Ping Monitor Specific Fields -->
-                <div v-if="form.type === 'ping'"
-                  class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <div>
-                    <label class="block text-sm font-medium mb-1">Hostname or IP Address</label>
-                    <input type="text" v-model="form.hostname" placeholder="example.com or 192.168.1.1"
+              <!-- Collapsible Monitor Form -->
+              <div v-if="showMonitorForm" class="p-4 border rounded-lg bg-blue-50 dark:bg-blue-900/20">
+                <h3 class="text-lg font-semibold mb-4">Edit Monitor Information</h3>
+                <form @submit.prevent="saveMonitor">
+                  <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-1">Label</label>
+                    <input type="text" v-model="form.label"
                       class="w-full px-3 py-2 rounded border bg-gray-50 dark:bg-zinc-900" />
                   </div>
-                  <div>
-                    <label class="block text-sm font-medium mb-1">Port</label>
-                    <input type="number" v-model.number="form.port" placeholder="80" min="1" max="65535"
+                  <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-1">Type</label>
+                    <select v-model="form.type" class="w-full px-3 py-2 rounded border bg-gray-50 dark:bg-zinc-900">
+                      <option value="ping">Ping Monitor</option>
+                      <option value="website">Website Monitor</option>
+                    </select>
+                  </div>
+                  <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-1">Periodicity (seconds)</label>
+                    <input type="number" v-model.number="form.periodicity" placeholder="60" min="5" max="300"
+                      class="w-full px-3 py-2 rounded border bg-gray-50 dark:bg-zinc-900" :class="form.periodicity && (form.periodicity < 5 || form.periodicity > 300)
+                        ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
+                        : ''" />
+                    <small v-if="form.periodicity && (form.periodicity < 5 || form.periodicity > 300)"
+                      class="text-red-500 text-xs">
+                      Periodicity must be between 5 and 300 seconds
+                    </small>
+                  </div>
+                  <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-1">Badge Label</label>
+                    <input type="text" v-model="form.badge_label" placeholder="Badge label"
                       class="w-full px-3 py-2 rounded border bg-gray-50 dark:bg-zinc-900" />
                   </div>
-                </div>
-                <!-- Website Monitor Specific Fields -->
-                <div v-if="form.type === 'website'"
-                  class="grid grid-cols-1 gap-4 mb-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                  <div>
-                    <label class="block text-sm font-medium mb-1">URL</label>
-                    <input type="url" v-model="form.url" placeholder="https://example.com/page"
-                      class="w-full px-3 py-2 rounded border bg-gray-50 dark:bg-zinc-900" />
+                  <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-1">Status</label>
+                    <select v-model="form.status" class="w-full px-3 py-2 rounded border bg-gray-50 dark:bg-zinc-900">
+                      <option value="succeeded">Succeeded</option>
+                      <option value="failed">Failed</option>
+                    </select>
                   </div>
-                  <div class="flex items-center gap-2">
-                    <input type="checkbox" v-model="form.check_status" id="checkStatus"
-                      class="rounded border-gray-300" />
-                    <label for="checkStatus" class="text-sm font-medium">
-                      Check Status (Fail if status not in 200-299 range)
-                    </label>
+                  <!-- Ping Monitor Specific Fields -->
+                  <div v-if="form.type === 'ping'"
+                    class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <div>
+                      <label class="block text-sm font-medium mb-1">Hostname or IP Address</label>
+                      <input type="text" v-model="form.hostname" placeholder="example.com or 192.168.1.1"
+                        class="w-full px-3 py-2 rounded border bg-gray-50 dark:bg-zinc-900" />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium mb-1">Port</label>
+                      <input type="number" v-model.number="form.port" placeholder="80" min="1" max="65535"
+                        class="w-full px-3 py-2 rounded border bg-gray-50 dark:bg-zinc-900" />
+                    </div>
                   </div>
-                  <div>
-                    <label class="block text-sm font-medium mb-1">Keywords (comma-separated)</label>
-                    <textarea v-model="form.keywords" placeholder="keyword1, keyword2, keyword3"
-                      class="w-full px-3 py-2 rounded border bg-gray-50 dark:bg-zinc-900" rows="2"></textarea>
-                    <small class="text-gray-500">Monitor fails if any keyword is not found in the response</small>
+                  <!-- Website Monitor Specific Fields -->
+                  <div v-if="form.type === 'website'"
+                    class="grid grid-cols-1 gap-4 mb-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                    <div>
+                      <label class="block text-sm font-medium mb-1">URL</label>
+                      <input type="url" v-model="form.url" placeholder="https://example.com/page"
+                        class="w-full px-3 py-2 rounded border bg-gray-50 dark:bg-zinc-900" />
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <input type="checkbox" v-model="form.check_status" id="checkStatus"
+                        class="rounded border-gray-300" />
+                      <label for="checkStatus" class="text-sm font-medium">
+                        Check Status (Fail if status not in 200-299 range)
+                      </label>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium mb-1">Keywords (comma-separated)</label>
+                      <textarea v-model="form.keywords" placeholder="keyword1, keyword2, keyword3"
+                        class="w-full px-3 py-2 rounded border bg-gray-50 dark:bg-zinc-900" rows="2"></textarea>
+                      <small class="text-gray-500">Monitor fails if any keyword is not found in the response</small>
+                    </div>
                   </div>
-                </div>
-                <div class="flex justify-end gap-2">
-                  <button type="button" @click="showMonitorForm = false"
-                    class="px-4 py-2 border rounded hover:bg-gray-100 dark:hover:bg-gray-700">
-                    Cancel
-                  </button>
-                  <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
-                    Save Monitor
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-
-          <!-- Monitor History Section -->
-          <div class="mb-8">
-            <div class="flex justify-between items-center mb-4">
-              <h2 class="text-xl font-bold">Monitor History</h2>
-              <div class="flex gap-2 items-center">
-                <label>View:</label>
-                <select v-model="historyViewMode" class="px-2 py-1 rounded border bg-gray-50 dark:bg-zinc-900">
-                  <option value="list">List</option>
-                  <option value="calendar">Calendar</option>
-                  <option value="graph">Graph</option>
-                </select>
-                <span v-if="logsLoading" class="text-gray-500 text-sm">Loading...</span>
+                  <div class="flex justify-end gap-2">
+                    <button type="button" @click="showMonitorForm = false"
+                      class="px-4 py-2 border rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                      Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                      Save Monitor
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
 
-            <!-- List Mode -->
-            <div v-if="historyViewMode === 'list'" class="mb-4">
-              <div class="flex gap-4 mb-2 items-end">
-                <div>
-                  <label class="block text-xs font-semibold mb-1">Status</label>
-                  <select v-model="listFilters.status" class="px-2 py-1 rounded border bg-gray-50 dark:bg-zinc-900">
-                    <option value="">All</option>
-                    <option value="success">Success</option>
-                    <option value="failed">Failed</option>
+            <!-- Monitor History Section -->
+            <div class="flex-1">
+              <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Monitor History</h2>
+                <div class="flex gap-2 items-center">
+                  <label>View:</label>
+                  <select v-model="historyViewMode" class="px-2 py-1 rounded border bg-gray-50 dark:bg-zinc-900">
+                    <option value="list">List</option>
+                    <option value="calendar">Calendar</option>
+                    <option value="graph">Graph</option>
                   </select>
-                </div>
-                <div>
-                  <label class="block text-xs font-semibold mb-1">Start Date</label>
-                  <input type="date" v-model="listFilters.startDate"
-                    class="px-2 py-1 rounded border bg-gray-50 dark:bg-zinc-900" />
-                </div>
-                <div>
-                  <label class="block text-xs font-semibold mb-1">End Date</label>
-                  <input type="date" v-model="listFilters.endDate"
-                    class="px-2 py-1 rounded border bg-gray-50 dark:bg-zinc-900" />
-                </div>
-                <div>
-                  <label class="block text-xs font-semibold mb-1">Per Page</label>
-                  <input type="number" v-model.number="listFilters.perPage" min="1" max="100"
-                    class="px-2 py-1 rounded border bg-gray-50 dark:bg-zinc-900" />
+                  <span v-if="logsLoading" class="text-gray-500 text-sm">Loading...</span>
                 </div>
               </div>
-              <div class="overflow-x-auto bg-[#171717] dark:bg-[#171717] rounded-lg shadow mb-6"
-                style="border: 2px solid white;">
-                <table class="min-w-full divide-y divide-gray-200">
-                  <thead>
-                    <tr>
-                      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">Started At</th>
-                      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">Status</th>
-                      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">Response Time (ms)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="item in paginatedListHistory" :key="item.id">
-                      <td class="px-4 py-2">{{ formatDateTime(item.started_at) }}</td>
-                      <td class="px-4 py-2">
-                        <span v-if="item.status === 'success'"
-                          class="inline-block bg-emerald-600 text-white text-xs rounded px-2 py-1">Success</span>
-                        <span v-else class="inline-block bg-red-600 text-white text-xs rounded px-2 py-1">Failed</span>
-                      </td>
-                      <td class="px-4 py-2">{{ item.response_time_ms }}</td>
-                    </tr>
-                    <tr v-if="paginatedListHistory.length === 0">
-                      <td colspan="3" class="px-4 py-6 text-center text-gray-500">No history found.</td>
-                    </tr>
-                  </tbody>
-                </table>
-                <div class="flex justify-end items-center mt-2 gap-2">
-                  <button :disabled="listFilters.page <= 1" @click="listFilters.page--"
-                    class="px-2 py-1 border rounded">Prev</button>
-                  <span>Page {{ listFilters.page }} ({{ listTotal }} total)</span>
-                  <button :disabled="listFilters.page * listFilters.perPage >= listTotal" @click="listFilters.page++"
-                    class="px-2 py-1 border rounded">Next</button>
-                </div>
-              </div>
-            </div>
 
-            <!-- Calendar Mode -->
-            <div v-if="historyViewMode === 'calendar'" class="mb-4">
-              <div class="bg-[#171717] rounded-lg p-4" style="border: 2px solid white;">
-                <h3 class="text-white font-bold mb-4 text-center">Monitor Activity (Last 3 Months)</h3>
-                <!-- SVG Horizontal Calendar Bar -->
-                <div class="flex justify-center mb-6">
-                  <svg :width="Math.max(calendarSvgRects.length * 5.9, 530)" height="15" xmlns="http://www.w3.org/2000/svg">
-                    <rect
-                      v-for="(rect, idx) in calendarSvgRects"
-                      :key="rect.date"
-                      height="15"
-                      width="3.25"
-                      :x="rect.x"
-                      y="0"
-                      :fill="rect.fill"
-                      :fill-opacity="rect.fillOpacity"
-                      rx="1.625"
-                      ry="1.625"
-                      :title="`${rect.date} ${rect.percent}`"
-                    />
-                  </svg>
+              <!-- List Mode -->
+              <div v-if="historyViewMode === 'list'" class="mb-4">
+                <div class="flex gap-4 mb-2 items-end">
+                  <div>
+                    <label class="block text-xs font-semibold mb-1">Status</label>
+                    <select v-model="listFilters.status" class="px-2 py-1 rounded border bg-gray-50 dark:bg-zinc-900">
+                      <option value="">All</option>
+                      <option value="success">Success</option>
+                      <option value="failed">Failed</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold mb-1">Start Date</label>
+                    <input type="date" v-model="listFilters.startDate"
+                      class="px-2 py-1 rounded border bg-gray-50 dark:bg-zinc-900" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold mb-1">End Date</label>
+                    <input type="date" v-model="listFilters.endDate"
+                      class="px-2 py-1 rounded border bg-gray-50 dark:bg-zinc-900" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold mb-1">Per Page</label>
+                    <input type="number" v-model.number="listFilters.perPage" min="1" max="100"
+                      class="px-2 py-1 rounded border bg-gray-50 dark:bg-zinc-900" />
+                  </div>
                 </div>
-
-                <!-- Calendar Table -->
-                <div class="overflow-x-auto">
-                  <table class="mx-auto">
-                    <!-- Week day headers -->
+                <div class="overflow-x-auto bg-[#171717] dark:bg-[#171717] rounded-lg shadow mb-6"
+                  style="border: 2px solid white;">
+                  <table class="min-w-full divide-y divide-gray-200">
                     <thead>
                       <tr>
-                        <th class="w-8"></th>
-                        <th v-for="day in weekDays" :key="day"
-                          class="w-3 h-3 text-xs text-gray-400 font-normal text-center">
-                          {{ day }}
-                        </th>
+                        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">Started At</th>
+                        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">Status</th>
+                        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">Response Time (ms)</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr v-for="(week, weekIndex) in calendarWeeks" :key="weekIndex" class="group">
-                        <!-- Month label for first week of each month -->
-                        <td class="text-xs text-gray-400 pr-2 text-right align-top">
-                          <span v-if="week.find(day => day && day.date.getDate() <= 7)" class="block">
-                            {{week.find(day => day && day.date.getDate() <= 7)?.date.toLocaleDateString('en-US', {
-                              month: 'short' }) }} </span>
+                      <tr v-for="item in paginatedListHistory" :key="item.id">
+                        <td class="px-4 py-2">{{ formatDateTime(item.started_at) }}</td>
+                        <td class="px-4 py-2">
+                          <span v-if="item.status === 'success'"
+                            class="inline-block bg-emerald-600 text-white text-xs rounded px-2 py-1">Success</span>
+                          <span v-else class="inline-block bg-red-600 text-white text-xs rounded px-2 py-1">Failed</span>
                         </td>
-
-                        <!-- Day cells -->
-                        <td v-for="(day, dayIndex) in week" :key="dayIndex" class="p-0">
-                          <div v-if="day"
-                            class="w-3 h-3 rounded-sm m-0.5 cursor-pointer transition-all hover:ring-1 hover:ring-white"
-                            :style="{ backgroundColor: day.color }"
-                            :title="`${day.date.toLocaleDateString()} - ${day.status}`"></div>
-                          <div v-else class="w-3 h-3 m-0.5"></div>
-                        </td>
+                        <td class="px-4 py-2">{{ item.response_time_ms }}</td>
+                      </tr>
+                      <tr v-if="paginatedListHistory.length === 0">
+                        <td colspan="3" class="px-4 py-6 text-center text-gray-500">No history found.</td>
                       </tr>
                     </tbody>
                   </table>
-                </div>
-
-                <!-- Summary stats -->
-                <div class="mt-4 text-center text-sm text-gray-400">
-                  <div class="flex justify-center gap-6">
-                    <span>Total Days: {{calendarDays.filter(d => d.summary?.total > 0).length}}</span>
-                    <span>Perfect Days: {{calendarDays.filter(d => d.summary?.total > 0 && d.summary.failed ===
-                      0).length }}</span>
-                    <span>Issues: {{calendarDays.filter(d => d.summary?.total > 0 && d.summary.failed / d.summary.total
-                      > 0.05).length }}</span>
+                  <div class="flex justify-end items-center mt-2 gap-2">
+                    <button :disabled="listFilters.page <= 1" @click="listFilters.page--"
+                      class="px-2 py-1 border rounded">Prev</button>
+                    <span>Page {{ listFilters.page }} ({{ listTotal }} total)</span>
+                    <button :disabled="listFilters.page * listFilters.perPage >= listTotal" @click="listFilters.page++"
+                      class="px-2 py-1 border rounded">Next</button>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <!-- Graph Mode -->
-            <div v-if="historyViewMode === 'graph'" class="mb-4">
-              <svg :width="600" :height="300" style="background:#171717;border:2px solid white;">
-                <g v-if="graphData.length">
-                  <template v-for="(item, idx) in graphData" :key="item.id">
-                    <circle :cx="40 + idx * ((560) / Math.max(graphData.length - 1, 1))"
-                      :cy="260 - (item.response_time_ms / Math.max(...graphData.map(d => d.response_time_ms), 1)) * 220"
-                      r="3" fill="#3b82f6" :title="`${item.started_at}: ${item.response_time_ms}ms`" />
-                  </template>
-                </g>
-                <!-- Axes -->
-                <line x1="40" y1="260" x2="580" y2="260" stroke="#fff" />
-                <line x1="40" y1="40" x2="40" y2="260" stroke="#fff" />
-                <text x="10" y="40" fill="#fff" font-size="12">Response Time (ms)</text>
-                <text x="500" y="290" fill="#fff" font-size="12">Time</text>
-              </svg>
-              <div v-if="graphData.length === 0" class="text-gray-500 p-4">No data for graph.</div>
-            </div>
+              <!-- Calendar Mode -->
+              <div v-if="historyViewMode === 'calendar'" class="mb-4">
+                <div class="bg-[#171717] rounded-lg p-4" style="border: 2px solid white;">
+                  <h3 class="text-white font-bold mb-4 text-center">Monitor Activity (Last 3 Months)</h3>
+                  <!-- SVG Horizontal Calendar Bar -->
+                  <div class="flex justify-center mb-6">
+                    <svg :width="Math.max(calendarSvgRects.length * 5.9, 530)" height="15" xmlns="http://www.w3.org/2000/svg">
+                      <rect
+                        v-for="(rect, idx) in calendarSvgRects"
+                        :key="rect.date"
+                        height="15"
+                        width="3.25"
+                        :x="rect.x"
+                        y="0"
+                        :fill="rect.fill"
+                        :fill-opacity="rect.fillOpacity"
+                        rx="1.625"
+                        ry="1.625"
+                        :title="`${rect.date} ${rect.percent}`"
+                      />
+                    </svg>
+                  </div>
 
-            <!-- Remove old response/latency history tables -->
+                  <!-- Calendar Table -->
+                  <div class="overflow-x-auto">
+                    <table class="mx-auto">
+                      <!-- Week day headers -->
+                      <thead>
+                        <tr>
+                          <th class="w-8"></th>
+                          <th v-for="day in weekDays" :key="day"
+                            class="w-3 h-3 text-xs text-gray-400 font-normal text-center">
+                            {{ day }}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="(week, weekIndex) in calendarWeeks" :key="weekIndex" class="group">
+                          <!-- Month label for first week of each month -->
+                          <td class="text-xs text-gray-400 pr-2 text-right align-top">
+                            <span v-if="week.find(day => day && day.date.getDate() <= 7)" class="block">
+                              {{week.find(day => day && day.date.getDate() <= 7)?.date.toLocaleDateString('en-US', {
+                                month: 'short' }) }} </span>
+                          </td>
+
+                          <!-- Day cells -->
+                          <td v-for="(day, dayIndex) in week" :key="dayIndex" class="p-0">
+                            <div v-if="day"
+                              class="w-3 h-3 rounded-sm m-0.5 cursor-pointer transition-all hover:ring-1 hover:ring-white"
+                              :style="{ backgroundColor: day.color }"
+                              :title="`${day.date.toLocaleDateString()} - ${day.status}`"></div>
+                            <div v-else class="w-3 h-3 m-0.5"></div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <!-- Summary stats -->
+                  <div class="mt-4 text-center text-sm text-gray-400">
+                    <div class="flex justify-center gap-6">
+                      <span>Total Days: {{calendarDays.filter(d => d.summary?.total > 0).length}}</span>
+                      <span>Perfect Days: {{calendarDays.filter(d => d.summary?.total > 0 && d.summary.failed ===
+                        0).length }}</span>
+                      <span>Issues: {{calendarDays.filter(d => d.summary?.total > 0 && d.summary.failed / d.summary.total
+                        > 0.05).length }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Graph Mode -->
+              <div v-if="historyViewMode === 'graph'" class="mb-4">
+                <svg :width="600" :height="300" style="background:#171717;border:2px solid white;">
+                  <g v-if="graphData.length">
+                    <template v-for="(item, idx) in graphData" :key="item.id">
+                      <circle :cx="40 + idx * ((560) / Math.max(graphData.length - 1, 1))"
+                        :cy="260 - (item.response_time_ms / Math.max(...graphData.map(d => d.response_time_ms), 1)) * 220"
+                        r="3" fill="#3b82f6" :title="`${item.started_at}: ${item.response_time_ms}ms`" />
+                    </template>
+                  </g>
+                  <!-- Axes -->
+                  <line x1="40" y1="260" x2="580" y2="260" stroke="#fff" />
+                  <line x1="40" y1="40" x2="40" y2="260" stroke="#fff" />
+                  <text x="10" y="40" fill="#fff" font-size="12">Response Time (ms)</text>
+                  <text x="500" y="290" fill="#fff" font-size="12">Time</text>
+                </svg>
+                <div v-if="graphData.length === 0" class="text-gray-500 p-4">No data for graph.</div>
+              </div>
+            </div>
           </div>
 
           <!-- Mock fetchSingleLog button and result display -->

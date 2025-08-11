@@ -209,7 +209,7 @@ const totalPages = computed(() => Math.ceil(filteredMonitors.value.length / page
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Projects', href: '/projects' },
-  { title: 'Project Details', href: '#' },
+  { title: `Project ${project.id}`, href: `/projects/${project.id}` },
 ];
 
 function goToMonitorDetails(monitorId: number) {

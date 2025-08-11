@@ -1,5 +1,10 @@
 <?php
 
+namespace App\Services;
+
+use PDO;
+use PDOException;
+
 class MonitorChecker
 {
 
@@ -20,7 +25,7 @@ class MonitorChecker
      * The path to the SQLite database file.
      * @var string
      */
-    public static string $DB_PATH = __DIR__ . '/../../database/database.sqlite';
+    public static string $DB_PATH = __DIR__ . '/../database/database.sqlite';
 
     /**
      * The PDO instance for database connections.
@@ -274,5 +279,4 @@ class MonitorChecker
 
 $checker = new MonitorChecker();
 $checker->initializeMonitorChecks();
-
 $checker->runChecks();

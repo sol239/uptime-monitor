@@ -5,6 +5,34 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
+/**
+ * @OA\Schema(
+ *   schema="Monitor",
+ *   type="object",
+ *   title="Monitor",
+ *   required={"project_id", "label", "periodicity", "type", "status"},
+ *   @OA\Property(property="id", type="integer", format="int64", example=1),
+ *   @OA\Property(property="project_id", type="integer", format="int64", example=1),
+ *   @OA\Property(property="label", type="string", example="Ping Google"),
+ *   @OA\Property(
+ *       property="periodicity",
+ *       type="integer",
+ *       example=60,
+ *       description="Interval in seconds (5-300)",
+ *       minimum=5,
+ *       maximum=300
+ *   ),
+ *   @OA\Property(property="type", type="string", example="ping"),
+ *   @OA\Property(property="badge_label", type="string", example="Google"),
+ *   @OA\Property(property="status", type="string", example="active"),
+ *   @OA\Property(property="latest_status", type="string", example="succeeded"),
+ *   @OA\Property(property="hostname", type="string", example="google.com"),
+ *   @OA\Property(property="port", type="integer", example=80),
+ *   @OA\Property(property="url", type="string", example="https://google.com"),
+ *   @OA\Property(property="check_status", type="boolean", example=true),
+ *   @OA\Property(property="keywords", type="array", @OA\Items(type="string"))
+ * )
+ */
 class Monitor extends Model
 {
     use HasFactory;
@@ -47,5 +75,4 @@ class Monitor extends Model
     {
         return $this->hasMany(MonitorLog::class);
     }
-
 }
