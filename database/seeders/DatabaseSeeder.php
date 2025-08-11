@@ -53,18 +53,21 @@ class DatabaseSeeder extends Seeder
             'project_id' => $project1->id,
             'type' => 'ping',
             'label' => 'Database Server Health',
-            'hostname' => 'db.ecommerce.com',
-            'port' => 5432,
+            'hostname' => 'httpbin.org',
+            'port' => 80,
             'latest_status' => 'succeeded',
+            'url' => null,
+            'keywords' => null,
+            'check_status' => null,
         ]);
 
         Monitor::factory()->create([
             'project_id' => $project1->id,
             'type' => 'website',
-            'label' => 'Homepage Availability',
-            'url' => 'https://shop.example.com',
+            'label' => 'Task Assignment Availability',
+            'url' => 'https://webik.ms.mff.cuni.cz/nswi153/seminar-project/',
             'check_status' => true,
-            'keywords' => ['Welcome', 'Shop', 'Products'],
+            'keywords' => ['monitor', 'project'],
             'latest_status' => 'succeeded',
         ]);
 
@@ -73,28 +76,31 @@ class DatabaseSeeder extends Seeder
             'project_id' => $project2->id,
             'type' => 'ping',
             'label' => 'Redis Cache Server',
-            'hostname' => 'redis.api.com',
-            'port' => 6379,
+            'hostname' => 'httpbin.org',
+            'port' => 443,
+            'latest_status' => 'succeeded',
+            'url' => null,
+            'keywords' => null,
+            'check_status' => null,
+        ]);
+
+        Monitor::factory()->create([
+            'project_id' => $project2->id,
+            'type' => 'website',
+            'label' => 'SIS UK',
+            'url' => 'https://is.cuni.cz/studium/index.php',
+            'check_status' => true,
+            'keywords' => ['Předměty', 'Login'],
             'latest_status' => 'succeeded',
         ]);
 
         Monitor::factory()->create([
             'project_id' => $project2->id,
             'type' => 'website',
-            'label' => 'API Health Check',
-            'url' => 'https://api.example.com/health',
+            'label' => 'Seznam.cz',
+            'url' => 'https://www.seznam.cz/',
             'check_status' => true,
-            'keywords' => ['healthy', 'status'],
-            'latest_status' => 'succeeded',
-        ]);
-
-        Monitor::factory()->create([
-            'project_id' => $project2->id,
-            'type' => 'website',
-            'label' => 'User Service API',
-            'url' => 'https://api.example.com/users/ping',
-            'check_status' => true,
-            'keywords' => ['pong'],
+            'keywords' => [],
             'latest_status' => 'succeeded',
         ]);
 
@@ -102,10 +108,13 @@ class DatabaseSeeder extends Seeder
         Monitor::factory()->create([
             'project_id' => $project3->id,
             'type' => 'ping',
-            'label' => 'Development Server',
-            'hostname' => 'dev-server.local',
-            'port' => 8080,
+            'label' => 'Json Placeholder',
+            'hostname' => 'jsonplaceholder.typicode.com',
+            'port' => 443,
             'latest_status' => 'failed',
+            'url' => null,
+            'keywords' => null,
+            'check_status' => null,
         ]);
 
         $project4 = Project::factory()->create([
@@ -122,7 +131,7 @@ class DatabaseSeeder extends Seeder
             'label' => 'LibGen Availability',
             'url' => 'https://www.libgen.is/',
             'check_status' => true,
-            'keywords' => ['Library', 'Genesis'],
+            'keywords' => [],
             'latest_status' => 'succeeded',
             'periodicity' => 300,
             'badge_label' => 'LibGen',

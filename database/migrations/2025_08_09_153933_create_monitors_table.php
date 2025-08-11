@@ -27,7 +27,7 @@ return new class extends Migration
             
             // Website monitor fields
             $table->text('url')->nullable(); // URL to connect to
-            $table->boolean('check_status')->default(false); // Check HTTP status
+            $table->boolean('check_status')->default(false)->nullable(); // Check HTTP status
             $table->json('keywords')->nullable(); // Keywords to check in response
             
             $table->timestamps();

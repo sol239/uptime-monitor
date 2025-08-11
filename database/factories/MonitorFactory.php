@@ -28,12 +28,12 @@ class MonitorFactory extends Factory
         if ($type === 'ping') {
             $data['hostname'] = $this->faker->domainName();
             $data['port'] = $this->faker->numberBetween(80, 8080);
+            // url, keywords, check_status are not set for ping
         } elseif ($type === 'website') {
-            $data['url'] = $this->faker->url();
-            $data['check_status'] = $this->faker->boolean();
-            $data['keywords'] = $this->faker->words(3);
+            // url, keywords, check_status must be set manually if needed
         }
 
         return $data;
     }
 }
+
