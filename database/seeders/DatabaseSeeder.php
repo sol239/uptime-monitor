@@ -34,6 +34,16 @@ class DatabaseSeeder extends Seeder
             'user_id' => 1,
         ]);
 
+        // TO TEST PAGINATION
+        for ($i = 1; $i <= 20; $i++) {
+            Project::factory()->create([
+            'label' => 'E-commerce Platform ' . $i,
+            'description' => 'Main e-commerce website monitoring.',
+            'tags' => ['production', 'ecommerce', 'critical'],
+            'user_id' => 1,
+        ]);
+        }
+
         $project2 = Project::factory()->create([
             'label' => 'API Gateway',
             'description' => 'REST API services monitoring.',
@@ -60,6 +70,20 @@ class DatabaseSeeder extends Seeder
             'keywords' => null,
             'check_status' => null,
         ]);
+
+        for ($i = 1; $i <= 20; $i++) {
+            Monitor::factory()->create([
+                'project_id' => $project1->id,
+                'monitor_type' => 'ping',
+                'label' => 'Server Health Check ' . $i,
+                'hostname' => 'example.com',
+                'port' => 80,
+                'latest_status' => 'succeeded',
+                'url' => null,
+                'keywords' => null,
+                'check_status' => null,
+            ]);
+        }
 
         Monitor::factory()->create([
             'project_id' => $project1->id,

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/vue3';
@@ -43,12 +43,38 @@ const filterLabel = ref('');
 const filterType = ref('');
 const filterStatus = ref('');
 
-// Pagination constants and state
-const PAGINATION = {
-  PAGE_SIZE: 2
-};
+// Pagination state - now dynamic
+const viewportHeight = ref(window.innerHeight);
 const currentPage = ref(1);
-const pageSize = ref(PAGINATION.PAGE_SIZE);
+
+// Calculate items per page based on viewport height
+const pageSize = computed(() => {
+  // Estimate available height for table
+  const headerHeight = 300; // approximate height of header, project info, filters, etc.
+  const paginationHeight = 80; // pagination controls height
+  const tableHeaderHeight = 50; // table header height
+  const availableHeight = viewportHeight.value - headerHeight - paginationHeight - tableHeaderHeight;
+  
+  // Each row is approximately 56px (h-14 class)
+  const rowHeight = 56;
+  const maxRows = Math.floor(availableHeight / rowHeight);
+  
+  // Minimum 5 rows, maximum 20 rows
+  return Math.max(5, Math.min(20, maxRows));
+});
+
+// Handle window resize
+function handleResize() {
+  viewportHeight.value = window.innerHeight;
+}
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize);
+});
 
 // Save project handler
 function save() {
@@ -233,10 +259,9 @@ function goToMonitorDetails(monitorId: number) {
 
   <Head title="Project Details" />
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="min-h-screen flex items-center justify-center">
-      <main class="flex-grow flex items-center justify-center">
-        <div class="bg-white dark:bg-[#121212] rounded-xl shadow-lg max-w-7xl w-full p-10"
-          style="border: 1px solid white;">
+    <div class="max-w-4xl mx-auto mt-8">
+      <div class="flex flex-col gap-4 mb-6">
+
           <h1 class="text-3xl font-extrabold mb-6 tracking-tight drop-shadow-md text-center">
             Project Details
           </h1>
@@ -246,68 +271,68 @@ function goToMonitorDetails(monitorId: number) {
           </div>
 
           <!-- Project Properties Section -->
-          <div class="mb-8">
-            <div class="flex justify-between items-center mb-4">
-              <h2 class="text-xl font-bold">Project Information</h2>
+          <div class="mb-6">
+            <div class="flex justify-between items-center mb-2">
+              <h2 class="text-lg font-bold">Project Information</h2>
               <button @click="showProjectForm = !showProjectForm"
-                class="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition">
-                {{ showProjectForm ? 'Cancel' : 'Edit Project' }}
+                class="px-3 py-1 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition text-sm">
+                {{ showProjectForm ? 'Cancel' : 'Edit' }}
               </button>
             </div>
 
             <!-- Project Info Display (when not editing) -->
-            <div v-if="!showProjectForm" class="p-4 border rounded-lg"
+            <div v-if="!showProjectForm" class="p-3 border rounded-lg"
               :style="{ background: '#171717', color: '#fff', borderColor: 'white' }">
-              <div class="mb-3">
-                <span class="text-sm font-semibold text-gray-300">Label:</span>
-                <p class="text-lg">{{ form.label || 'No label set' }}</p>
-              </div>
-              <div class="mb-3">
-                <span class="text-sm font-semibold text-gray-300">Description:</span>
-                <p class="text-gray-200">{{ form.description || 'No description set' }}</p>
-              </div>
-              <div>
-                <span class="text-sm font-semibold text-gray-300">Tags:</span>
-                <div class="mt-2 flex flex-wrap gap-2">
-                  <span v-for="tag in form.tags" :key="tag"
-                    class="inline-block bg-[#262626] text-xs rounded px-2 py-1 text-white">{{ tag }}</span>
-                  <span v-if="form.tags.length === 0" class="text-gray-400 text-sm">No tags set</span>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span class="text-xs font-semibold text-gray-300">Label:</span>
+                  <p class="text-sm">{{ form.label || 'No label set' }}</p>
+                </div>
+                <div>
+                  <span class="text-xs font-semibold text-gray-300">Description:</span>
+                  <p class="text-sm text-gray-200">{{ form.description || 'No description set' }}</p>
+                </div>
+                <div>
+                  <span class="text-xs font-semibold text-gray-300">Tags:</span>
+                  <div class="mt-1 flex flex-wrap gap-1">
+                    <span v-for="tag in form.tags" :key="tag"
+                      class="inline-block bg-[#262626] text-xs rounded px-1 py-0.5 text-white">{{ tag }}</span>
+                    <span v-if="form.tags.length === 0" class="text-gray-400 text-xs">No tags set</span>
+                  </div>
                 </div>
               </div>
             </div>
 
             <!-- Collapsible Project Form -->
-            <div v-if="showProjectForm" class="p-4 border rounded-lg bg-emerald-50 dark:bg-emerald-900/20">
-              <h3 class="text-lg font-semibold mb-4">Edit Project Information</h3>
+            <div v-if="showProjectForm" class="p-3 border rounded-lg bg-emerald-50 dark:bg-emerald-900/20">
+              <h3 class="text-base font-semibold mb-3">Edit Project Information</h3>
 
               <form @submit.prevent="save">
-                <div class="mb-4">
-                  <label class="block text-sm font-semibold mb-1">Label</label>
-                  <input type="text" v-model="form.label"
-                    class="w-full px-3 py-2 rounded border bg-gray-50 dark:bg-zinc-900" />
-                </div>
-                <div class="mb-4">
-                  <label class="block text-sm font-semibold mb-1">Description</label>
-                  <textarea v-model="form.description"
-                    class="w-full px-3 py-2 rounded border bg-gray-50 dark:bg-zinc-900" rows="3"></textarea>
-                </div>
-                <div class="mb-4">
-                  <label class="block text-sm font-semibold mb-1">Tags</label>
-                  <input type="text" v-model="tagsInput" placeholder="Comma separated"
-                    class="w-full px-3 py-2 rounded border bg-gray-50 dark:bg-zinc-900" />
-                  <div class="mt-2 flex flex-wrap gap-2">
-                    <span v-for="tag in form.tags" :key="tag"
-                      class="inline-block bg-[#262626] text-xs rounded px-2 py-1">{{ tag }}</span>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                  <div>
+                    <label class="block text-xs font-semibold mb-1">Label</label>
+                    <input type="text" v-model="form.label"
+                      class="w-full px-2 py-1 rounded border bg-gray-50 dark:bg-zinc-900 text-sm" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold mb-1">Description</label>
+                    <textarea v-model="form.description"
+                      class="w-full px-2 py-1 rounded border bg-gray-50 dark:bg-zinc-900 text-sm" rows="2"></textarea>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold mb-1">Tags</label>
+                    <input type="text" v-model="tagsInput" placeholder="Comma separated"
+                      class="w-full px-2 py-1 rounded border bg-gray-50 dark:bg-zinc-900 text-sm" />
                   </div>
                 </div>
 
                 <div class="flex justify-end gap-2">
                   <button type="button" @click="showProjectForm = false"
-                    class="px-4 py-2 border rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                    class="px-3 py-1 border rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-sm">
                     Cancel
                   </button>
                   <button type="submit"
-                    class="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition">
+                    class="px-3 py-1 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition text-sm">
                     Save Project
                   </button>
                 </div>
@@ -528,9 +553,8 @@ function goToMonitorDetails(monitorId: number) {
           </div>
 
           <!-- Monitors Table -->
-          <div class="overflow-x-auto bg-[#171717] dark:bg-[#171717] rounded-lg shadow mb-6"
-            style="border: 2px solid white;">
-            <table class="min-w-full divide-y divide-gray-200 ">
+          <div class="overflow-x-auto bg-[#171717] dark:bg-[#171717] rounded-lg shadow border-2 border-white" :style="`min-height: ${pageSize * 56}px`">
+            <table class="min-w-full divide-y divide-gray-200">
               <thead>
                 <tr>
                   <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">Label</th>
@@ -562,30 +586,34 @@ function goToMonitorDetails(monitorId: number) {
                       class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition">Details</button>
                   </td>
                 </tr>
+                <!-- Add empty rows to maintain fixed height -->
+                <tr v-for="n in Math.max(0, pageSize - paginatedMonitors.length)" :key="'empty-' + n" class="h-14">
+                  <td class="px-4 py-2" colspan="4">&nbsp;</td>
+                </tr>
                 <tr v-if="paginatedMonitors.length === 0">
                   <td colspan="4" class="px-4 py-6 text-center text-gray-500">No monitors found.</td>
                 </tr>
               </tbody>
             </table>
-            <!-- Pagination Controls -->
-            <div v-if="totalPages > 1" class="flex justify-center items-center gap-2 py-4">
-              <button @click="currentPage = Math.max(1, currentPage - 1)" :disabled="currentPage === 1"
-                class="px-3 py-1 rounded border bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50">
-                Prev
-              </button>
-              <span class="mx-2 text-sm">
-                Page {{ currentPage }} of {{ totalPages }}
-              </span>
-              <button @click="currentPage = Math.min(totalPages, currentPage + 1)"
-                :disabled="currentPage === totalPages"
-                class="px-3 py-1 rounded border bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50">
-                Next
-              </button>
-            </div>
+          </div>
+
+          <!-- Pagination Controls - Outside table container -->
+          <div v-if="totalPages > 1" class="flex justify-center items-center gap-2 py-4 mt-4">
+            <button @click="currentPage = Math.max(1, currentPage - 1)" :disabled="currentPage === 1"
+              class="px-3 py-1 rounded border bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50">
+              Prev
+            </button>
+            <span class="mx-2 text-sm">
+              Page {{ currentPage }} of {{ totalPages }}
+            </span>
+            <button @click="currentPage = Math.min(totalPages, currentPage + 1)"
+              :disabled="currentPage === totalPages"
+              class="px-3 py-1 rounded border bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50">
+              Next
+            </button>
           </div>
           <!-- TODO: Pagination does not work -->
         </div>
-      </main>
-    </div>
+      </div>
   </AppLayout>
 </template>

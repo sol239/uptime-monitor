@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/vue3';
@@ -18,7 +18,7 @@ const user = computed(() => auth.value.user || null);
 const projects = ref<Array<any>>(page.props.projects || []);
 const filterLabel = ref('');
 const filterTags = ref('');
-const sortDirection = ref<'asc' | 'desc'>('asc');
+const sortDirection = ref<'id' | 'asc' | 'desc'>('id');
 
 // Edit modal state
 const showEditModal = ref(false);
@@ -38,6 +38,39 @@ const form = ref({
 const tagsInput = ref('');
 const saveSuccess = ref(false);
 
+// Pagination state - now dynamic
+const viewportHeight = ref(window.innerHeight);
+const currentPage = ref(1);
+
+// Calculate items per page based on viewport height
+const ITEMS_PER_PAGE = computed(() => {
+  // Estimate available height for table
+  const headerHeight = 200; // approximate height of header, filters, etc.
+  const paginationHeight = 80; // pagination controls height
+  const tableHeaderHeight = 50; // table header height
+  const availableHeight = viewportHeight.value - headerHeight - paginationHeight - tableHeaderHeight;
+  
+  // Each row is approximately 56px (h-14 class)
+  const rowHeight = 56;
+  const maxRows = Math.floor(availableHeight / rowHeight);
+  
+  // Minimum 5 rows, maximum 20 rows
+  return Math.max(5, Math.min(20, maxRows));
+});
+
+// Handle window resize
+function handleResize() {
+  viewportHeight.value = window.innerHeight;
+}
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize);
+});
+
 // Computed filtered and sorted projects
 const filteredProjects = computed(() => {
   let filtered = projects.value;
@@ -56,14 +89,31 @@ const filteredProjects = computed(() => {
     );
   }
 
-  filtered = filtered.sort((a, b) => {
-    if (a.label < b.label) return sortDirection.value === 'asc' ? -1 : 1;
-    if (a.label > b.label) return sortDirection.value === 'asc' ? 1 : -1;
-    return 0;
-  });
+  if (sortDirection.value === 'asc') {
+    filtered = filtered.sort((a, b) => {
+      if (a.label < b.label) return -1;
+      if (a.label > b.label) return 1;
+      return 0;
+    });
+  } else if (sortDirection.value === 'desc') {
+    filtered = filtered.sort((a, b) => {
+      if (a.label < b.label) return 1;
+      if (a.label > b.label) return -1;
+      return 0;
+    });
+  } else {
+    // Default sort by id
+    filtered = filtered.sort((a, b) => a.id - b.id);
+  }
 
   return filtered;
 });
+
+const paginatedProjects = computed(() => {
+  const start = (currentPage.value - 1) * ITEMS_PER_PAGE.value;
+  return filteredProjects.value.slice(start, start + ITEMS_PER_PAGE.value);
+});
+const totalPages = computed(() => Math.ceil(filteredProjects.value.length / ITEMS_PER_PAGE.value));
 
 function sortByLabel(direction: 'asc' | 'desc') {
   sortDirection.value = direction;
@@ -142,6 +192,16 @@ function save() {
       // Optionally show error to user
     });
 }
+
+function cycleSortDirection() {
+  if (sortDirection.value === 'id') {
+    sortDirection.value = 'asc';
+  } else if (sortDirection.value === 'asc') {
+    sortDirection.value = 'desc';
+  } else {
+    sortDirection.value = 'id';
+  }
+}
 </script>
 
 <template>
@@ -152,13 +212,6 @@ function save() {
       <div class="flex flex-col gap-4 mb-6">
         <div class="flex justify-between items-center">
           <h2 class="text-2xl font-bold">Projects</h2>
-          <!-- Open modal to create project -->
-          <button
-            class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
-            @click="showProjectForm = true"
-          >
-            Create Project
-          </button>
         </div>
 
         <!-- Collapsible Project Form -->
@@ -197,37 +250,38 @@ function save() {
           </form>
         </div>
 
-        <div class="mb-4 flex gap-4 flex-wrap">
+        <div class="mb-4 flex gap-4 flex-wrap items-center">
           <input type="text" v-model="filterLabel" placeholder="Filter by label"
             class="px-2 py-1 rounded border bg-gray-50 dark:bg-zinc-900" />
           <input type="text" v-model="filterTags" placeholder="Filter by tags"
             class="px-2 py-1 rounded border bg-gray-50 dark:bg-zinc-900" />
+          <button
+            class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
+            @click="showProjectForm = true"
+          >
+            Create Project
+          </button>
         </div>
       </div>
 
-      <div class="overflow-x-auto bg-[#171717] dark:bg-[#171717] rounded-lg shadow">
+      <div class="overflow-x-auto bg-[#171717] dark:bg-[#171717] rounded-lg shadow border-2 border-white" :style="`min-height: ${ITEMS_PER_PAGE * 56}px`">
         <table class="min-w-full divide-y divide-gray-200">
           <thead>
             <tr>
               <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">
                 <div class="flex items-center gap-2">
-                  Label
-                  <div class="flex flex-col">
-                    <button
-                      @click="sortByLabel('asc')"
-                      class="text-gray-400 hover:text-gray-600 text-[10px] leading-none"
-                      :class="{ 'text-blue-500': sortDirection === 'asc' }"
-                    >
-                      ▲
-                    </button>
-                    <button
-                      @click="sortByLabel('desc')"
-                      class="text-gray-400 hover:text-gray-600 text-[10px] leading-none"
-                      :class="{ 'text-blue-500': sortDirection === 'desc' }"
-                    >
-                      ▼
-                    </button>
-                  </div>
+                  <button
+                    @click="cycleSortDirection"
+                    class="text-gray-700 hover:text-blue-500 text-xs font-semibold cursor-pointer"
+                    :class="{ 
+                      'text-blue-500': sortDirection !== 'id'
+                    }"
+                    :title="sortDirection === 'id' ? 'Sort by ID (default)' : 
+                           sortDirection === 'asc' ? 'Sort by Label (A-Z)' : 
+                           'Sort by Label (Z-A)'"
+                  >
+                    Label {{ sortDirection === 'id' ? '•' : sortDirection === 'asc' ? '▲' : '▼' }}
+                  </button>
                 </div>
               </th>
               <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">Tags</th>
@@ -235,7 +289,7 @@ function save() {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="project in filteredProjects" :key="project.id">
+            <tr v-for="project in paginatedProjects" :key="project.id">
               <td class="px-4 py-2">{{ project.label }}</td>
               <td class="px-4 py-2">
                 <span
@@ -247,31 +301,53 @@ function save() {
                 </span>
               </td>
               <td class="px-4 py-2">
-                <button
-                  @click="openEditModal(project)"
-                  class="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition mr-2"
-                >
-                  Edit
-                </button>
-                <button
-                  @click="deleteProject(project.id)"
-                  class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
-                >
-                  Delete
-                </button>
-                <a
-                  :href="`/projects/${project.id}`"
-                  class="ml-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-                >
-                  Details
-                </a>
+                <div class="flex flex-col sm:flex-row gap-1 sm:gap-2">
+                  <button
+                    @click="openEditModal(project)"
+                    class="px-2 py-1 text-xs bg-yellow-500 text-white rounded hover:bg-yellow-600 transition"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    @click="deleteProject(project.id)"
+                    class="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition"
+                  >
+                    Delete
+                  </button>
+                  <a
+                    :href="`/projects/${project.id}`"
+                    class="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition text-center"
+                  >
+                    Details
+                  </a>
+                </div>
               </td>
             </tr>
-            <tr v-if="filteredProjects.length === 0">
+            <!-- Add empty rows to maintain fixed height -->
+            <tr v-for="n in Math.max(0, ITEMS_PER_PAGE - paginatedProjects.length)" :key="'empty-' + n" class="h-14">
+              <td class="px-4 py-2" colspan="3">&nbsp;</td>
+            </tr>
+            <tr v-if="paginatedProjects.length === 0">
               <td colspan="3" class="px-4 py-6 text-center text-gray-500">No projects found.</td>
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Pagination Controls - Outside table container -->
+      <div v-if="totalPages > 1" class="flex justify-center items-center gap-2 py-4 mt-4">
+        <button @click="currentPage = Math.max(1, currentPage - 1)" :disabled="currentPage === 1"
+          class="px-3 py-1 rounded border bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50">
+          Prev
+        </button>
+        <span class="mx-2 text-sm">
+          Page {{ currentPage }} of {{ totalPages }}
+        </span>
+        <button @click="currentPage = Math.min(totalPages, currentPage + 1)"
+          :disabled="currentPage === totalPages"
+          class="px-3 py-1 rounded border bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50">
+          Next
+        </button>
       </div>
 
       <!-- Edit Modal -->
