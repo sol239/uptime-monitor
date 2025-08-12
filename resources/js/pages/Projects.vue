@@ -112,6 +112,12 @@ function deleteProject(id: number) {
 }
 
 // Save project handler
+function resetProjectForm() {
+  showProjectForm.value = false;
+  form.value = { label: '', description: '', tags: [] };
+  tagsInput.value = '';
+}
+
 function save() {
   form.value.tags = tagsInput.value.split(',').map(t => t.trim()).filter(Boolean);
   console.log("USER:", user.value)
@@ -128,13 +134,11 @@ function save() {
         labels.value.push(response.data.label);
       }
       saveSuccess.value = true;
-      showProjectForm.value = false;
-      // Reset form
-      form.value = { label: '', description: '', tags: [] };
-      tagsInput.value = '';
+      resetProjectForm();
     })
     .catch(error => {
       console.error('Failed to create project:', error);
+      resetProjectForm();
       // Optionally show error to user
     });
 }

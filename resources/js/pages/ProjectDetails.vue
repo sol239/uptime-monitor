@@ -190,6 +190,18 @@ function cancelEdit() {
   editingMonitor.value = null;
 }
 
+// Delete monitor handler
+function deleteMonitor(id: number) {
+  monitors.value = monitors.value.filter(m => m.id !== id);
+  axios.delete(`/api/v1/monitors/${id}`)
+    .then(() => {
+      console.log("Monitor successfully deleted.");
+    })
+    .catch(err => {
+      console.error('Failed to delete monitor', err);
+    });
+}
+
 // Computed filtered monitors
 const filteredMonitors = computed(() => {
   return monitors.value.filter(m => {
@@ -530,7 +542,9 @@ function goToMonitorDetails(monitorId: number) {
               <tbody>
                 <tr v-for="monitor in paginatedMonitors" :key="monitor.id">
                   <td class="px-4 py-2">{{ monitor.label }}</td>
-                  <td class="px-4 py-2">{{ monitor.monitor_type.charAt(0).toUpperCase() + monitor.monitor_type.slice(1) }}</td>
+                  <td class="px-4 py-2">
+                    {{ monitor.monitor_type ? (monitor.monitor_type.charAt(0).toUpperCase() + monitor.monitor_type.slice(1)) : 'Unknown' }}
+                  </td>
                   <td class="px-4 py-2">
                     <span v-if="monitor.latest_status === 'succeeded'"
                       class="inline-block bg-emerald-600 text-white text-xs rounded px-2 py-1">Succeeded</span>
