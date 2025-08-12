@@ -38,10 +38,14 @@ const monitorKeywords = ref('');
 // Add missing monitors ref - initialize with data from backend
 const monitors = ref(page.props.monitors || []);
 
-// Monitor filters
+// Monitor filters - now just label
 const filterLabel = ref('');
 const filterType = ref('');
 const filterStatus = ref('');
+
+// Add sorting for type and status
+const typeDirection = ref<'all' | 'ping' | 'website'>('all');
+const statusDirection = ref<'all' | 'succeeded' | 'failed'>('all');
 
 // Pagination state - now dynamic
 const viewportHeight = ref(window.innerHeight);
@@ -232,8 +236,8 @@ function deleteMonitor(id: number) {
 const filteredMonitors = computed(() => {
   return monitors.value.filter(m => {
     const labelMatch = !filterLabel.value || m.label.includes(filterLabel.value);
-    const typeMatch = !filterType.value || m.monitor_type === filterType.value;
-    const statusMatch = !filterStatus.value || m.latest_status === filterStatus.value;
+    const typeMatch = typeDirection.value === 'all' || m.monitor_type === typeDirection.value;
+    const statusMatch = statusDirection.value === 'all' || m.latest_status === statusDirection.value;
     return labelMatch && typeMatch && statusMatch;
   });
 });
@@ -253,6 +257,26 @@ const breadcrumbs: BreadcrumbItem[] = [
 function goToMonitorDetails(monitorId: number) {
   window.location.href = `/projects/${project.id}/monitors/${monitorId}`;
 }
+
+function cycleTypeFilter() {
+  if (typeDirection.value === 'all') {
+    typeDirection.value = 'ping';
+  } else if (typeDirection.value === 'ping') {
+    typeDirection.value = 'website';
+  } else {
+    typeDirection.value = 'all';
+  }
+}
+
+function cycleStatusFilter() {
+  if (statusDirection.value === 'all') {
+    statusDirection.value = 'succeeded';
+  } else if (statusDirection.value === 'succeeded') {
+    statusDirection.value = 'failed';
+  } else {
+    statusDirection.value = 'all';
+  }
+}
 </script>
 
 <template>
@@ -260,7 +284,7 @@ function goToMonitorDetails(monitorId: number) {
   <Head title="Project Details" />
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="max-w-4xl mx-auto mt-8">
-      <div class="flex flex-col gap-4 mb-6">
+      <div class="flex flex-col gap-4 ">
 
           <h1 class="text-3xl font-extrabold mb-6 tracking-tight drop-shadow-md text-center">
             Project Details
@@ -271,7 +295,7 @@ function goToMonitorDetails(monitorId: number) {
           </div>
 
           <!-- Project Properties Section -->
-          <div class="mb-6">
+          <div>
             <div class="flex justify-between items-center mb-2">
               <h2 class="text-lg font-bold">Project Information</h2>
               <button @click="showProjectForm = !showProjectForm"
@@ -342,14 +366,6 @@ function goToMonitorDetails(monitorId: number) {
 
           <!-- Monitor Management -->
           <div class="mb-8">
-            <div class="flex justify-between items-center mb-4">
-              <h2 class="text-xl font-bold">Monitors</h2>
-              <button @click="showCreateForm = !showCreateForm"
-                class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
-                {{ showCreateForm ? 'Cancel' : 'Create Monitor' }}
-              </button>
-            </div>
-
             <!-- Collapsible Create Monitor Form -->
             <div v-if="showCreateForm" class="mb-6 p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
               <h3 class="text-lg font-semibold mb-4">Create New Monitor</h3>
@@ -536,20 +552,34 @@ function goToMonitorDetails(monitorId: number) {
             </div>
           </div>
 
-          <!-- Monitor Filters -->
-          <div class="mb-4 flex gap-4 flex-wrap">
-            <input type="text" v-model="filterLabel" placeholder="Filter by label"
-              class="px-2 py-1 rounded border bg-gray-50 dark:bg-zinc-900" />
-            <select v-model="filterType" class="px-2 py-1 rounded border bg-gray-50 dark:bg-zinc-900">
-              <option value="">All Types</option>
-              <option value="ping">Ping</option>
-              <option value="website">Website</option>
-            </select>
-            <select v-model="filterStatus" class="px-2 py-1 rounded border bg-gray-50 dark:bg-zinc-900">
-              <option value="">All Statuses</option>
-              <option value="succeeded">Succeeded</option>
-              <option value="failed">Failed</option>
-            </select>
+          <!-- Monitor Filters with Title and Create Button -->
+          <div class="mb-4 flex justify-between items-center gap-4 flex-wrap">
+            <div class="flex items-center gap-4">
+              <h2 class="text-xl font-bold">Monitors</h2>
+              <input type="text" v-model="filterLabel" placeholder="Filter by label"
+                class="px-2 py-1 rounded border bg-gray-50 dark:bg-zinc-900" />
+            </div>
+            <div class="flex items-center gap-4">
+              <!-- Pagination Controls -->
+              <div v-if="totalPages > 1" class="flex items-center gap-2">
+                <button @click="currentPage = Math.max(1, currentPage - 1)" :disabled="currentPage === 1"
+                  class="px-3 py-1 rounded border bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50">
+                  Prev
+                </button>
+                <span class="mx-2 text-sm">
+                  Page {{ currentPage }} of {{ totalPages }}
+                </span>
+                <button @click="currentPage = Math.min(totalPages, currentPage + 1)"
+                  :disabled="currentPage === totalPages"
+                  class="px-3 py-1 rounded border bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50">
+                  Next
+                </button>
+              </div>
+              <button @click="showCreateForm = !showCreateForm"
+                class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                {{ showCreateForm ? 'Cancel' : 'Create Monitor' }}
+              </button>
+            </div>
           </div>
 
           <!-- Monitors Table -->
@@ -558,8 +588,34 @@ function goToMonitorDetails(monitorId: number) {
               <thead>
                 <tr>
                   <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">Label</th>
-                  <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">Type</th>
-                  <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">Latest Status</th>
+                  <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">
+                    <button
+                      @click="cycleTypeFilter"
+                      class="text-gray-700 hover:text-blue-500 text-xs font-semibold cursor-pointer"
+                      :class="{ 
+                        'text-blue-500': typeDirection !== 'all'
+                      }"
+                      :title="typeDirection === 'all' ? 'Show All Types' : 
+                             typeDirection === 'ping' ? 'Show Ping Only' : 
+                             'Show Website Only'"
+                    >
+                      Type {{ typeDirection === 'all' ? '•' : typeDirection === 'ping' ? 'P' : 'W' }}
+                    </button>
+                  </th>
+                  <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">
+                    <button
+                      @click="cycleStatusFilter"
+                      class="text-gray-700 hover:text-blue-500 text-xs font-semibold cursor-pointer"
+                      :class="{ 
+                        'text-blue-500': statusDirection !== 'all'
+                      }"
+                      :title="statusDirection === 'all' ? 'Show All Statuses' : 
+                             statusDirection === 'succeeded' ? 'Show Succeeded Only' : 
+                             'Show Failed Only'"
+                    >
+                      Latest Status {{ statusDirection === 'all' ? '•' : statusDirection === 'succeeded' ? '✓' : '✗' }}
+                    </button>
+                  </th>
                   <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">Actions</th>
                 </tr>
               </thead>
@@ -575,15 +631,16 @@ function goToMonitorDetails(monitorId: number) {
                     <span v-else class="inline-block bg-red-600 text-white text-xs rounded px-2 py-1">Failed</span>
                   </td>
                   <td class="px-4 py-2">
-                    <button @click="openEditForm(monitor)"
-                      class="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition mr-2">
-                      Edit
-                    </button>
-                    <button @click="deleteMonitor(monitor.id)"
-                      class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition mr-2">Delete</button>
-
-                    <button @click="goToMonitorDetails(monitor.id)"
-                      class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition">Details</button>
+                    <div class="flex flex-col sm:flex-row gap-1 sm:gap-2">
+                      <button @click="openEditForm(monitor)"
+                        class="px-2 py-1 text-xs bg-yellow-500 text-white rounded hover:bg-yellow-600 transition">
+                        Edit
+                      </button>
+                      <button @click="deleteMonitor(monitor.id)"
+                        class="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition">Delete</button>
+                      <button @click="goToMonitorDetails(monitor.id)"
+                        class="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition">Details</button>
+                    </div>
                   </td>
                 </tr>
                 <!-- Add empty rows to maintain fixed height -->
@@ -596,23 +653,6 @@ function goToMonitorDetails(monitorId: number) {
               </tbody>
             </table>
           </div>
-
-          <!-- Pagination Controls - Outside table container -->
-          <div v-if="totalPages > 1" class="flex justify-center items-center gap-2 py-4 mt-4">
-            <button @click="currentPage = Math.max(1, currentPage - 1)" :disabled="currentPage === 1"
-              class="px-3 py-1 rounded border bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50">
-              Prev
-            </button>
-            <span class="mx-2 text-sm">
-              Page {{ currentPage }} of {{ totalPages }}
-            </span>
-            <button @click="currentPage = Math.min(totalPages, currentPage + 1)"
-              :disabled="currentPage === totalPages"
-              class="px-3 py-1 rounded border bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50">
-              Next
-            </button>
-          </div>
-          <!-- TODO: Pagination does not work -->
         </div>
       </div>
   </AppLayout>

@@ -209,7 +209,7 @@ function cycleSortDirection() {
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="max-w-4xl mx-auto mt-8">
-      <div class="flex flex-col gap-4 mb-6">
+      <div class="flex flex-col gap-4">
         <div class="flex justify-between items-center">
           <h2 class="text-2xl font-bold">Projects</h2>
         </div>
