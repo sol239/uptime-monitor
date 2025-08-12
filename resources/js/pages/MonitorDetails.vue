@@ -380,8 +380,11 @@ const breadcrumbs: BreadcrumbItem[] = [
                 <form @submit.prevent="saveMonitor">
                   <div class="mb-4">
                     <label class="block text-sm font-semibold mb-1">Label</label>
-                    <input type="text" v-model="form.label"
-                      class="w-full px-3 py-2 rounded border bg-gray-50 dark:bg-zinc-900" />
+                    <input
+                      type="text"
+                      v-model="form.label"
+                      class="monitor-label-input w-full px-3 py-2 rounded border bg-gray-50 dark:bg-zinc-900"
+                    />
                   </div>
                   <div class="mb-4">
                     <label class="block text-sm font-semibold mb-1">Type</label>
