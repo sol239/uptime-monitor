@@ -77,8 +77,6 @@ return [
             'query' => [
                 App\GraphQL\Queries\ProjectsQuery::class,
                 App\GraphQL\Queries\StatusQuery::class,
-                App\GraphQL\Queries\MonitorQuery::class,
-                App\GraphQL\Queries\StatusQuery::class,
 
             ],
             'mutation' => [
