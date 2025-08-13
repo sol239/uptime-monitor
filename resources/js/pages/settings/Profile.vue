@@ -37,7 +37,7 @@ const submit = () => {
     form.patch(route('profile.update'), {
         preserveScroll: true,
     });
-    
+
     // reload window
     // TODO: this was added to vue template since there was no updating of the avatar, this is the easiest solution.
     window.location.reload();

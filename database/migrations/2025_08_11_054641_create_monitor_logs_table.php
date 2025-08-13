@@ -14,7 +14,7 @@ return new class extends Migration
 
             $table->timestamp('started_at');
 
-            $table->string('status'); 
+            $table->string('status');
 
             $table->unsignedInteger('response_time_ms');
 

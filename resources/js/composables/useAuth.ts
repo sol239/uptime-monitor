@@ -1,22 +1,22 @@
-import { computed } from 'vue';
+import type { AppPageProps, User } from '@/types';
 import { usePage } from '@inertiajs/vue3';
-import type { User, AppPageProps } from '@/types';
+import { computed } from 'vue';
 
 export function useAuth() {
     const page = usePage<AppPageProps>();
-    
+
     const user = computed((): User | null => {
         return page.props.auth?.user || null;
     });
-    
+
     const userId = computed((): number | null => {
         return user.value?.id || null;
     });
-    
+
     const isAuthenticated = computed((): boolean => {
         return !!user.value;
     });
-    
+
     return {
         user: user.value,
         userId: userId.value,

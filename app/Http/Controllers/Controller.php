@@ -1,7 +1,6 @@
 <?php
+
 namespace App\Http\Controllers;
-
-
 
 /**
  * @OA\Info(
@@ -10,7 +9,6 @@ namespace App\Http\Controllers;
  *     description="API documentation for Monitor Vue project"
  * )
  */
-
 abstract class Controller
 {
     //

@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * @OA\Schema(
@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  *   type="object",
  *   title="MonitorLog",
  *   required={"monitor_id", "started_at", "status"},
+ *
  *   @OA\Property(property="id", type="integer", format="int64", example=1),
  *   @OA\Property(property="monitor_id", type="integer", format="int64", example=1),
  *   @OA\Property(property="started_at", type="string", format="date-time", example="2025-08-11T12:00:00Z"),

@@ -13,7 +13,7 @@ class MonitorFactory extends Factory
     public function definition(): array
     {
         $monitor_type = $this->faker->randomElement(['website', 'ping']);
-        
+
         $data = [
             'project_id' => Project::factory(),
             'label' => $this->faker->words(2, true),
@@ -36,4 +36,3 @@ class MonitorFactory extends Factory
         return $data;
     }
 }
-

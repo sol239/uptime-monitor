@@ -2,14 +2,14 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use App\Models\Project;
 use App\Models\Monitor;
+use App\Models\Project;
+use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
-{   
+{
     /**
      * Seed the application's database.
      */
@@ -19,12 +19,12 @@ class DatabaseSeeder extends Seeder
 
         User::factory()->create([
             'name' => 'Test User 1',
-            'email' => 'test1@example.com'
+            'email' => 'test1@example.com',
         ]);
 
         User::factory()->create([
             'name' => 'Test User 2',
-            'email' => 'test2@example.com'
+            'email' => 'test2@example.com',
         ]);
 
         $project1 = Project::factory()->create([
@@ -37,11 +37,11 @@ class DatabaseSeeder extends Seeder
         // TO TEST PAGINATION
         for ($i = 1; $i <= 20; $i++) {
             Project::factory()->create([
-            'label' => 'E-commerce Platform ' . $i,
-            'description' => 'Main e-commerce website monitoring.',
-            'tags' => ['production', 'ecommerce', 'critical'],
-            'user_id' => 1,
-        ]);
+                'label' => 'E-commerce Platform '.$i,
+                'description' => 'Main e-commerce website monitoring.',
+                'tags' => ['production', 'ecommerce', 'critical'],
+                'user_id' => 1,
+            ]);
         }
 
         $project2 = Project::factory()->create([
@@ -75,7 +75,7 @@ class DatabaseSeeder extends Seeder
             Monitor::factory()->create([
                 'project_id' => $project1->id,
                 'monitor_type' => 'ping',
-                'label' => 'Server Health Check ' . $i,
+                'label' => 'Server Health Check '.$i,
                 'hostname' => 'example.com',
                 'port' => 80,
                 'latest_status' => 'succeeded',

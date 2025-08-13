@@ -17,20 +17,23 @@ use Illuminate\Http\Request;
 class MonitorController extends Controller
 {
     /**
- * @OA\Get(
- *     path="/api/v1/monitors",
- *     summary="Get list of monitors",
- *     tags={"Monitors"},
- *     @OA\Response(
- *         response=200,
- *         description="List of monitors",
- *         @OA\JsonContent(
- *             type="array",
- *             @OA\Items(ref="#/components/schemas/Monitor")
- *         )
- *     )
- * )
- */
+     * @OA\Get(
+     *     path="/api/v1/monitors",
+     *     summary="Get list of monitors",
+     *     tags={"Monitors"},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of monitors",
+     *
+     *         @OA\JsonContent(
+     *             type="array",
+     *
+     *             @OA\Items(ref="#/components/schemas/Monitor")
+     *         )
+     *     )
+     * )
+     */
     public function index()
     {
         return Monitor::all();
@@ -41,13 +44,17 @@ class MonitorController extends Controller
      *     path="/api/v1/monitors",
      *     summary="Create a new monitor",
      *     tags={"Monitors"},
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(ref="#/components/schemas/Monitor")
      *     ),
+     *
      *     @OA\Response(
      *         response=201,
      *         description="Monitor created",
+     *
      *         @OA\JsonContent(ref="#/components/schemas/Monitor")
      *     )
      * )
@@ -55,6 +62,7 @@ class MonitorController extends Controller
     public function store(Request $request)
     {
         $monitor = Monitor::create($request->all());
+
         return response()->json($monitor, 201);
     }
 
@@ -63,15 +71,19 @@ class MonitorController extends Controller
      *     path="/api/v1/monitors/{monitor}",
      *     summary="Get monitor detail",
      *     tags={"Monitors"},
+     *
      *     @OA\Parameter(
      *         name="monitor",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Monitor detail",
+     *
      *         @OA\JsonContent(ref="#/components/schemas/Monitor")
      *     )
      * )
@@ -86,19 +98,25 @@ class MonitorController extends Controller
      *     path="/api/v1/monitors/{monitor}",
      *     summary="Update monitor",
      *     tags={"Monitors"},
+     *
      *     @OA\Parameter(
      *         name="monitor",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(ref="#/components/schemas/Monitor")
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Monitor updated",
+     *
      *         @OA\JsonContent(ref="#/components/schemas/Monitor")
      *     )
      * )
@@ -106,6 +124,7 @@ class MonitorController extends Controller
     public function update(Request $request, Monitor $monitor)
     {
         $monitor->update($request->all());
+
         return $monitor;
     }
 
@@ -114,12 +133,15 @@ class MonitorController extends Controller
      *     path="/api/v1/monitors/{monitor}",
      *     summary="Delete monitor",
      *     tags={"Monitors"},
+     *
      *     @OA\Parameter(
      *         name="monitor",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\Response(
      *         response=204,
      *         description="Monitor deleted"
@@ -129,6 +151,7 @@ class MonitorController extends Controller
     public function destroy(Monitor $monitor)
     {
         $monitor->delete();
+
         return response()->json(null, 204);
     }
 
@@ -137,21 +160,27 @@ class MonitorController extends Controller
      *     path="/api/v1/monitors/{monitor}/history",
      *     summary="Get monitor history",
      *     tags={"Monitors"},
+     *
      *     @OA\Parameter(
      *         name="monitor",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\Parameter(
      *         name="mode",
      *         in="query",
      *         required=false,
+     *
      *         @OA\Schema(type="string", enum={"status", "response", "latency"})
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Monitor history",
+     *
      *         @OA\JsonContent(type="array", @OA\Items(type="object"))
      *     )
      * )
@@ -178,15 +207,19 @@ class MonitorController extends Controller
      *     path="/api/v1/monitors/{monitor}/calendar-summary",
      *     summary="Get monitor calendar summary",
      *     tags={"Monitors"},
+     *
      *     @OA\Parameter(
      *         name="monitor",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Calendar summary",
+     *
      *         @OA\JsonContent(type="object")
      *     )
      * )
@@ -203,7 +236,7 @@ class MonitorController extends Controller
         foreach ($logs as $log) {
             $summary[$log->date] = [
                 'total' => $log->total,
-                'failed' => $log->failed
+                'failed' => $log->failed,
             ];
         }
 

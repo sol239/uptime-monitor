@@ -11,8 +11,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Models\MonitorLog;
 use App\Models\Monitor;
+use App\Models\MonitorLog;
 use Illuminate\Http\Request;
 
 class MonitorLogController extends Controller
@@ -22,51 +22,67 @@ class MonitorLogController extends Controller
      *     path="/api/v1/monitors/{monitorId}/logs",
      *     summary="Get monitor logs",
      *     tags={"MonitorLogs"},
+     *
      *     @OA\Parameter(
      *         name="monitorId",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\Parameter(
      *         name="status",
      *         in="query",
      *         required=false,
+     *
      *         @OA\Schema(type="string")
      *     ),
+     *
      *     @OA\Parameter(
      *         name="start_date",
      *         in="query",
      *         required=false,
+     *
      *         @OA\Schema(type="string", format="date")
      *     ),
+     *
      *     @OA\Parameter(
      *         name="end_date",
      *         in="query",
      *         required=false,
+     *
      *         @OA\Schema(type="string", format="date")
      *     ),
+     *
      *     @OA\Parameter(
      *         name="response_time_only",
      *         in="query",
      *         required=false,
+     *
      *         @OA\Schema(type="boolean")
      *     ),
+     *
      *     @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
+     *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\Parameter(
      *         name="per_page",
      *         in="query",
      *         required=false,
+     *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="List of monitor logs",
+     *
      *         @OA\JsonContent(type="object")
      *     )
      * )
@@ -109,12 +125,12 @@ class MonitorLogController extends Controller
                 'logs' => $logs,
                 'total' => $total,
                 'page' => $page,
-                'per_page' => $perPage
+                'per_page' => $perPage,
             ]);
         }
 
         return response()->json([
-            'logs' => $query->get()
+            'logs' => $query->get(),
         ]);
     }
 
@@ -123,19 +139,25 @@ class MonitorLogController extends Controller
      *     path="/api/v1/monitors/{monitorId}/logs",
      *     summary="Create a monitor log",
      *     tags={"MonitorLogs"},
+     *
      *     @OA\Parameter(
      *         name="monitorId",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(ref="#/components/schemas/MonitorLog")
      *     ),
+     *
      *     @OA\Response(
      *         response=201,
      *         description="Monitor log created",
+     *
      *         @OA\JsonContent(ref="#/components/schemas/MonitorLog")
      *     )
      * )
@@ -146,6 +168,7 @@ class MonitorLogController extends Controller
         $data['monitor_id'] = $monitorId;
 
         $monitorLog = MonitorLog::create($data);
+
         return response()->json($monitorLog, 201);
     }
 
@@ -154,15 +177,19 @@ class MonitorLogController extends Controller
      *     path="/api/v1/logs/{monitorLog}",
      *     summary="Get monitor log detail",
      *     tags={"MonitorLogs"},
+     *
      *     @OA\Parameter(
      *         name="monitorLog",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Monitor log detail",
+     *
      *         @OA\JsonContent(ref="#/components/schemas/MonitorLog")
      *     )
      * )
@@ -177,19 +204,25 @@ class MonitorLogController extends Controller
      *     path="/api/v1/logs/{monitorLog}",
      *     summary="Update monitor log",
      *     tags={"MonitorLogs"},
+     *
      *     @OA\Parameter(
      *         name="monitorLog",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(ref="#/components/schemas/MonitorLog")
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Monitor log updated",
+     *
      *         @OA\JsonContent(ref="#/components/schemas/MonitorLog")
      *     )
      * )
@@ -197,6 +230,7 @@ class MonitorLogController extends Controller
     public function update(Request $request, MonitorLog $monitorLog)
     {
         $monitorLog->update($request->all());
+
         return $monitorLog;
     }
 
@@ -205,12 +239,15 @@ class MonitorLogController extends Controller
      *     path="/api/v1/logs/{monitorLog}",
      *     summary="Delete monitor log",
      *     tags={"MonitorLogs"},
+     *
      *     @OA\Parameter(
      *         name="monitorLog",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\Response(
      *         response=204,
      *         description="Monitor log deleted"
@@ -220,6 +257,7 @@ class MonitorLogController extends Controller
     public function destroy(MonitorLog $monitorLog)
     {
         $monitorLog->delete();
+
         return response()->json(null, 204);
     }
 }

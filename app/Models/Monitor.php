@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * @OA\Schema(
@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  *   type="object",
  *   title="Monitor",
  *   required={"project_id", "label", "periodicity", "type", "status"},
+ *
  *   @OA\Property(property="id", type="integer", format="int64", example=1),
  *   @OA\Property(property="project_id", type="integer", format="int64", example=1),
  *   @OA\Property(property="label", type="string", example="Ping Google"),
@@ -44,14 +45,14 @@ class Monitor extends Model
         'monitor_type',
         'badge_label',
         'status',
-    'latest_status', // Result of monitoring task: succeeded or failed
+        'latest_status', // Result of monitoring task: succeeded or failed
         // Ping monitor fields
         'hostname',      // Host name or IP address
         'port',          // Port to connect to
         // Website monitor fields
         'url',           // URL to connect to
-    'check_status',  // If true, monitor is 'failed' when status is not in [200, 300)
-    'keywords'       // List of keywords - monitor is 'failed' if any keyword is not in response
+        'check_status',  // If true, monitor is 'failed' when status is not in [200, 300)
+        'keywords',       // List of keywords - monitor is 'failed' if any keyword is not in response
     ];
 
     protected function casts(): array
