@@ -250,7 +250,7 @@ const filteredMonitors = computed(() => {
     return monitors.value.filter((m) => {
         const labelMatch = !filterLabel.value || m.label.includes(filterLabel.value);
         const typeMatch = typeDirection.value === 'all' || m.monitor_type === typeDirection.value;
-        const statusMatch = statusDirection.value === 'all' || m.latest_status === statusDirection.value;
+        const statusMatch = statusDirection.value === 'all' || m.status === statusDirection.value;
         return labelMatch && typeMatch && statusMatch;
     });
 });
@@ -750,7 +750,7 @@ function cycleStatusFilter() {
                                 </td>
                                 <td class="px-4 py-2">
                                     <span
-                                        v-if="monitor.latest_status === 'succeeded'"
+                                        v-if="monitor.status === 'succeeded'"
                                         class="inline-block rounded bg-emerald-600 px-2 py-1 text-xs text-white"
                                         >Succeeded</span
                                     >

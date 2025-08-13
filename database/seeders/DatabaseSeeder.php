@@ -34,15 +34,7 @@ class DatabaseSeeder extends Seeder
             'user_id' => 1,
         ]);
 
-        // TO TEST PAGINATION
-        for ($i = 1; $i <= 20; $i++) {
-            Project::factory()->create([
-                'label' => 'E-commerce Platform '.$i,
-                'description' => 'Main e-commerce website monitoring.',
-                'tags' => ['production', 'ecommerce', 'critical'],
-                'user_id' => 2,
-            ]);
-        }
+     
 
         $project2 = Project::factory()->create([
             'label' => 'API Gateway',
@@ -65,25 +57,79 @@ class DatabaseSeeder extends Seeder
             'label' => 'Database Server Health',
             'hostname' => 'httpbin.org',
             'port' => 80,
-            'latest_status' => 'succeeded',
             'url' => null,
             'keywords' => null,
             'check_status' => null,
         ]);
 
+        // TO TEST PAGINATION
+        /*
         for ($i = 1; $i <= 20; $i++) {
+            Project::factory()->create([
+                'label' => 'E-commerce Platform '.$i,
+                'description' => 'Main e-commerce website monitoring.',
+                'tags' => ['production', 'ecommerce', 'critical'],
+                'user_id' => 2,
+            ]);
+        }   
+
+        // PERFORMANCE TESTING
+        for ($i = 1; $i <= 400; $i++) {
             Monitor::factory()->create([
                 'project_id' => $project2->id,
                 'monitor_type' => 'ping',
                 'label' => 'Server Health Check '.$i,
                 'hostname' => 'example.com',
+                'periodicity' => 10,
                 'port' => 80,
-                'latest_status' => 'succeeded',
                 'url' => null,
                 'keywords' => null,
                 'check_status' => null,
             ]);
         }
+
+        for ($i = 1; $i <= 700; $i++) {
+            Monitor::factory()->create([
+                'project_id' => $project2->id,
+                'monitor_type' => 'ping',
+                'label' => 'Server Health Check '.$i,
+                'hostname' => 'example.com',
+                'periodicity' => 6,
+                'port' => 80,
+                'url' => null,
+                'keywords' => null,
+                'check_status' => null,
+            ]);
+        }
+
+        for ($i = 1; $i <= 2000; $i++) {
+            Monitor::factory()->create([
+                'project_id' => $project2->id,
+                'monitor_type' => 'ping',
+                'label' => 'Server Health Check '.$i,
+                'hostname' => 'example.com',
+                'periodicity' => 9,
+                'port' => 80,
+                'url' => null,
+                'keywords' => null,
+                'check_status' => null,
+            ]);
+        }
+
+        for ($i = 1; $i <= 900; $i++) {
+            Monitor::factory()->create([
+                'project_id' => $project2->id,
+                'monitor_type' => 'ping',
+                'label' => 'Server Health Check '.$i,
+                'hostname' => 'example.com',
+                'periodicity' => 6,
+                'port' => 80,
+                'url' => null,
+                'keywords' => null,
+                'check_status' => null,
+            ]);
+        }*/
+        //-----------------------------------------------------------------
 
         Monitor::factory()->create([
             'project_id' => $project1->id,
@@ -92,7 +138,6 @@ class DatabaseSeeder extends Seeder
             'url' => 'https://webik.ms.mff.cuni.cz/nswi153/seminar-project/',
             'check_status' => true,
             'keywords' => ['monitor', 'project'],
-            'latest_status' => 'succeeded',
         ]);
 
         // Create monitors for project 2
@@ -102,7 +147,6 @@ class DatabaseSeeder extends Seeder
             'label' => 'Redis Cache Server',
             'hostname' => 'httpbin.org',
             'port' => 443,
-            'latest_status' => 'succeeded',
             'url' => null,
             'keywords' => null,
             'check_status' => null,
@@ -115,7 +159,6 @@ class DatabaseSeeder extends Seeder
             'url' => 'https://is.cuni.cz/studium/index.php',
             'check_status' => true,
             'keywords' => ['Předměty', 'Login'],
-            'latest_status' => 'succeeded',
         ]);
 
         Monitor::factory()->create([
@@ -125,7 +168,6 @@ class DatabaseSeeder extends Seeder
             'url' => 'https://www.seznam.cz/',
             'check_status' => true,
             'keywords' => [],
-            'latest_status' => 'succeeded',
         ]);
 
         // Create 1 monitor for project 3
@@ -135,7 +177,6 @@ class DatabaseSeeder extends Seeder
             'label' => 'Json Placeholder',
             'hostname' => 'jsonplaceholder.typicode.com',
             'port' => 443,
-            'latest_status' => 'failed',
             'url' => null,
             'keywords' => null,
             'check_status' => null,
@@ -156,7 +197,6 @@ class DatabaseSeeder extends Seeder
             'url' => 'https://www.libgen.is/',
             'check_status' => true,
             'keywords' => [],
-            'latest_status' => 'succeeded',
             'periodicity' => 300,
             'badge_label' => 'LibGen',
         ]);
@@ -168,7 +208,6 @@ class DatabaseSeeder extends Seeder
             'url' => 'https://annas-archive.org/',
             'check_status' => true,
             'keywords' => ['Anna', 'library', 'books'],
-            'latest_status' => 'succeeded',
             'periodicity' => 300,
             'badge_label' => 'AnnaArchive',
         ]);
@@ -180,7 +219,6 @@ class DatabaseSeeder extends Seeder
             'url' => 'https://z-library.sk/',
             'check_status' => true,
             'keywords' => ['Search', 'knowledge'],
-            'latest_status' => 'succeeded',
             'periodicity' => 300,
             'badge_label' => 'ZLibrary',
         ]);

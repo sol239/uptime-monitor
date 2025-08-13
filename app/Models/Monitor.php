@@ -26,7 +26,6 @@ use Illuminate\Database\Eloquent\Model;
  *   @OA\Property(property="monitor_type", type="string", example="ping"),
  *   @OA\Property(property="badge_label", type="string", example="Google"),
  *   @OA\Property(property="status", type="string", example="active"),
- *   @OA\Property(property="latest_status", type="string", example="succeeded"),
  *   @OA\Property(property="hostname", type="string", example="google.com"),
  *   @OA\Property(property="port", type="integer", example=80),
  *   @OA\Property(property="url", type="string", example="https://google.com"),
@@ -45,7 +44,6 @@ class Monitor extends Model
         'monitor_type',
         'badge_label',
         'status',
-        'latest_status', // Result of monitoring task: succeeded or failed
         // Ping monitor fields
         'hostname',      // Host name or IP address
         'port',          // Port to connect to
@@ -63,7 +61,6 @@ class Monitor extends Model
             'check_status' => 'boolean',
             'keywords' => 'array',
             'status' => 'string',
-            'latest_status' => 'string',
         ];
     }
 

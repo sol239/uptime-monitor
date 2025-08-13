@@ -300,7 +300,7 @@ const calendarSvgRects = computed(() => {
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Projects', href: '/projects' },
-    { title: `Project ${project.value.id}`, href: `/projects/${project.value.id}` },
+    { title: `${project.value.label}`, href: `/projects/${project.value.id}` },
     { title: 'Monitor Details', href: '#' },
 ];
 </script>

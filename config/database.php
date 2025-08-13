@@ -35,9 +35,8 @@ return [
             'driver' => 'sqlite',
             'url' => env('DB_URL'),
 
-            // TODO: :) this is bs
-            'database' => env(database_path('database.sqlite'), "database/database.sqlite"),
-            //'database' => env('DB_DATABASE', database_path('database.sqlite')),
+            //'database' => env(database_path('database.sqlite'), "database/database.sqlite"),
+            'database' => env('DB_DATABASE', database_path('database.sqlite')),
             'prefix' => '',
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
             'busy_timeout' => null,

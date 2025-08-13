@@ -19,7 +19,6 @@ return new class extends Migration
             $table->string('monitor_type')->nullable();
             $table->string('badge_label')->nullable();
             $table->string('status')->default('unknown');
-            $table->string('latest_status')->nullable(); // Result: succeeded or failed
 
             // Ping monitor fields
             $table->string('hostname')->nullable(); // Host name or IP address

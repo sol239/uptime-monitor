@@ -20,8 +20,7 @@ class MonitorFactory extends Factory
             'periodicity' => $this->faker->numberBetween(5, 300),
             'monitor_type' => $monitor_type,
             'badge_label' => $this->faker->word(),
-            'status' => $this->faker->randomElement(['failed', 'succeeded']),
-            'latest_status' => $this->faker->randomElement(['succeeded', 'failed']),
+            'status' => $this->faker->randomElement(['failed']),
         ];
 
         // Add type-specific fields
