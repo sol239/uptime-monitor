@@ -14,6 +14,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Monitor;
 use App\Models\MonitorLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class MonitorLogController extends Controller
 {
@@ -89,49 +90,74 @@ class MonitorLogController extends Controller
      */
     public function index($monitorId, Request $request)
     {
-        $query = MonitorLog::where('monitor_id', $monitorId);
+        Log::info("Fetching monitor logs", [
+            'monitor_id' => $monitorId,
+            'params' => $request->all()
+        ]);
 
-        // Filter by status if provided
-        if ($request->has('status') && $request->status !== '') {
-            $query->where('status', $request->status);
-        }
+        try {
+            $query = MonitorLog::where('monitor_id', $monitorId);
 
-        // Filter by date range if provided
-        if ($request->has('start_date') && $request->start_date !== '') {
-            $query->whereDate('started_at', '>=', $request->start_date);
-        }
+            // Filter by status if provided
+            if ($request->has('status') && $request->status !== '') {
+                $query->where('status', $request->status);
+            }
 
-        if ($request->has('end_date') && $request->end_date !== '') {
-            $query->whereDate('started_at', '<=', $request->end_date);
-        }
+            // Filter by date range if provided
+            if ($request->has('start_date') && $request->start_date !== '') {
+                $query->whereDate('started_at', '>=', $request->start_date);
+            }
 
-        // Handle response_time_only parameter for graph data
-        if ($request->has('response_time_only') && $request->response_time_only) {
-            $query->select('started_at', 'response_time_ms');
-        }
+            if ($request->has('end_date') && $request->end_date !== '') {
+                $query->whereDate('started_at', '<=', $request->end_date);
+            }
 
-        // Order by started_at descending
-        $query->orderBy('started_at', 'desc');
+            // Handle response_time_only parameter for graph data
+            if ($request->has('response_time_only') && $request->response_time_only) {
+                $query->select('started_at', 'response_time_ms');
+            }
 
-        // Handle pagination
-        if ($request->has('page') && $request->has('per_page')) {
-            $page = (int) $request->page;
-            $perPage = min((int) $request->per_page, 100); // Max 100 per page
+            // Order by started_at descending
+            $query->orderBy('started_at', 'desc');
 
-            $total = $query->count();
-            $logs = $query->skip(($page - 1) * $perPage)->take($perPage)->get();
+            // Handle pagination
+            if ($request->has('page') && $request->has('per_page')) {
+                $page = (int) $request->page;
+                $perPage = min((int) $request->per_page, 100); // Max 100 per page
+
+                $total = $query->count();
+                $logs = $query->skip(($page - 1) * $perPage)->take($perPage)->get();
+
+                Log::info("Paginated monitor logs fetched", [
+                    'monitor_id' => $monitorId,
+                    'page' => $page,
+                    'per_page' => $perPage,
+                    'total' => $total
+                ]);
+
+                return response()->json([
+                    'logs' => $logs,
+                    'total' => $total,
+                    'page' => $page,
+                    'per_page' => $perPage,
+                ]);
+            }
+
+            Log::info("Monitor logs fetched", [
+                'monitor_id' => $monitorId,
+                'count' => $query->count()
+            ]);
 
             return response()->json([
-                'logs' => $logs,
-                'total' => $total,
-                'page' => $page,
-                'per_page' => $perPage,
+                'logs' => $query->get(),
             ]);
+        } catch (\Exception $e) {
+            Log::error("Error fetching monitor logs", [
+                'monitor_id' => $monitorId,
+                'error' => $e->getMessage()
+            ]);
+            return response()->json(['error' => 'Failed to fetch logs'], 500);
         }
-
-        return response()->json([
-            'logs' => $query->get(),
-        ]);
     }
 
     /**
@@ -164,12 +190,29 @@ class MonitorLogController extends Controller
      */
     public function store(Request $request, $monitorId)
     {
-        $data = $request->all();
-        $data['monitor_id'] = $monitorId;
+        Log::info("Creating monitor log", [
+            'monitor_id' => $monitorId,
+            'data' => $request->all()
+        ]);
 
-        $monitorLog = MonitorLog::create($data);
+        try {
+            $data = $request->all();
+            $data['monitor_id'] = $monitorId;
 
-        return response()->json($monitorLog, 201);
+            $monitorLog = MonitorLog::create($data);
+
+            Log::info("Monitor log created", [
+                'monitor_log_id' => $monitorLog->id
+            ]);
+
+            return response()->json($monitorLog, 201);
+        } catch (\Exception $e) {
+            Log::error("Error creating monitor log", [
+                'monitor_id' => $monitorId,
+                'error' => $e->getMessage()
+            ]);
+            return response()->json(['error' => 'Failed to create log'], 500);
+        }
     }
 
     /**
@@ -196,6 +239,9 @@ class MonitorLogController extends Controller
      */
     public function show(MonitorLog $monitorLog)
     {
+        Log::info("Fetching monitor log detail", [
+            'monitor_log_id' => $monitorLog->id
+        ]);
         return $monitorLog;
     }
 
@@ -229,9 +275,26 @@ class MonitorLogController extends Controller
      */
     public function update(Request $request, MonitorLog $monitorLog)
     {
-        $monitorLog->update($request->all());
+        Log::info("Updating monitor log", [
+            'monitor_log_id' => $monitorLog->id,
+            'data' => $request->all()
+        ]);
 
-        return $monitorLog;
+        try {
+            $monitorLog->update($request->all());
+
+            Log::info("Monitor log updated", [
+                'monitor_log_id' => $monitorLog->id
+            ]);
+
+            return $monitorLog;
+        } catch (\Exception $e) {
+            Log::error("Error updating monitor log", [
+                'monitor_log_id' => $monitorLog->id,
+                'error' => $e->getMessage()
+            ]);
+            return response()->json(['error' => 'Failed to update log'], 500);
+        }
     }
 
     /**
@@ -256,8 +319,24 @@ class MonitorLogController extends Controller
      */
     public function destroy(MonitorLog $monitorLog)
     {
-        $monitorLog->delete();
+        Log::info("Deleting monitor log", [
+            'monitor_log_id' => $monitorLog->id
+        ]);
 
-        return response()->json(null, 204);
+        try {
+            $monitorLog->delete();
+
+            Log::info("Monitor log deleted", [
+                'monitor_log_id' => $monitorLog->id
+            ]);
+
+            return response()->json(null, 204);
+        } catch (\Exception $e) {
+            Log::error("Error deleting monitor log", [
+                'monitor_log_id' => $monitorLog->id,
+                'error' => $e->getMessage()
+            ]);
+            return response()->json(['error' => 'Failed to delete log'], 500);
+        }
     }
 }

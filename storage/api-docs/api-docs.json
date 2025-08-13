@@ -6,6 +6,40 @@
         "version": "1.0.0"
     },
     "paths": {
+        "/api/v1/badge/{monitorId}": {
+            "get": {
+                "tags": [
+                    "Badge"
+                ],
+                "summary": "Get badge for a monitor",
+                "description": "Returns an HTML badge representing the status of a monitor.",
+                "operationId": "getBadge",
+                "parameters": [
+                    {
+                        "name": "monitorId",
+                        "in": "path",
+                        "description": "ID of the monitor",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "HTML badge",
+                        "content": {
+                            "text/html": {
+                                "example": "<img alt='Static Badge' src='https://img.shields.io/badge/badge-label-up-green'>"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Monitor not found"
+                    }
+                }
+            }
+        },
         "/api/v1/monitors": {
             "get": {
                 "tags": [
@@ -816,6 +850,10 @@
         }
     },
     "tags": [
+        {
+            "name": "Badge",
+            "description": "Badge"
+        },
         {
             "name": "Monitors",
             "description": "Monitors"

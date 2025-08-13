@@ -9,7 +9,7 @@ return [
 
         // The controller/method to use in GraphQL request.
         // Also supported array syntax: `[\Rebing\GraphQL\GraphQLController::class, 'query']`
-        'controller' => Rebing\GraphQL\GraphQLController::class.'@query',
+        'controller' => Rebing\GraphQL\GraphQLController::class . '@query',
 
         // Any middleware for the graphql route group
         // This middleware will apply to all schemas
@@ -75,7 +75,11 @@ return [
     'schemas' => [
         'default' => [
             'query' => [
-                // ExampleQuery::class,
+                App\GraphQL\Queries\ProjectsQuery::class,
+                App\GraphQL\Queries\StatusQuery::class,
+                App\GraphQL\Queries\MonitorQuery::class,
+                App\GraphQL\Queries\StatusQuery::class,
+
             ],
             'mutation' => [
                 // ExampleMutation::class,
@@ -94,6 +98,8 @@ return [
             // An array of middlewares, overrides the global ones
             'execution_middleware' => null,
         ],
+
+        
     ],
 
     // The global types available to all schemas.
@@ -106,6 +112,11 @@ return [
     // ]
     //
     'types' => [
+        App\GraphQL\Types\ProjectType::class,
+        App\GraphQL\Types\MonitorType::class,
+        App\GraphQL\Types\StatusType::class,
+        App\GraphQL\Types\QueryType::class,
+
         // ExampleType::class,
         // ExampleRelationType::class,
         // \Rebing\GraphQL\Support\UploadType::class,
@@ -204,7 +215,7 @@ return [
         'cache_driver' => env('GRAPHQL_APQ_CACHE_DRIVER', config('cache.default')),
 
         // The cache prefix
-        'cache_prefix' => config('cache.prefix').':graphql.apq',
+        'cache_prefix' => config('cache.prefix') . ':graphql.apq',
 
         // The cache ttl in seconds - See https://www.apollographql.com/docs/apollo-server/performance/apq/#adjusting-cache-time-to-live-ttl
         'cache_ttl' => 300,
@@ -225,5 +236,11 @@ return [
      * Globally registered ResolverMiddleware
      */
     'resolver_middleware_append' => null,
+
+
+    'graphiql' => [
+        'prefix' => 'graphiql',
+        'middleware' => [],
+    ],
 
 ];

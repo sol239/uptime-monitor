@@ -63,7 +63,7 @@ describe('Laravel + Inertia Login', () => {
 
     // check that page contains project details
     cy.contains('My Test Project');
-    cy.contains('Edit Project');
+    cy.contains('Edit');
     cy.contains('My Ping Monitor');
     cy.contains('My Website Monitor');
 

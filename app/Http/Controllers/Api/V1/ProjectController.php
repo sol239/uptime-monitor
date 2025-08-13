@@ -34,7 +34,15 @@ class ProjectController extends Controller
     // GET /api/projects
     public function index()
     {
-        return Project::all();
+        Log::info('ProjectController@index called');
+        try {
+            $result = Project::all();
+            Log::info('ProjectController@index success', ['count' => count($result)]);
+            return $result;
+        } catch (\Exception $e) {
+            Log::error('ProjectController@index error', ['error' => $e->getMessage()]);
+            throw $e;
+        }
     }
 
     /**
@@ -65,21 +73,23 @@ class ProjectController extends Controller
     // POST /api/projects
     public function store(Request $request)
     {
-        // T
-        $validated = $request->validate([
-            'label' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'tags' => 'nullable|array',
-            'tags.*' => 'string|max:255',
-            'user_id' => 'required|integer', // Ensure user_id is present in request
-        ]);
-
-        // Log validated array in the requested format
-        Log::info($validated);
-
-        $project = Project::create($validated);
-
-        return response()->json($project, 201);
+        Log::info('ProjectController@store called', $request->all());
+        try {
+            $validated = $request->validate([
+                'label' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'tags' => 'nullable|array',
+                'tags.*' => 'string|max:255',
+                'user_id' => 'required|integer',
+            ]);
+            Log::info('ProjectController@store validated', $validated);
+            $project = Project::create($validated);
+            Log::info('ProjectController@store created', ['id' => $project->id]);
+            return response()->json($project, 201);
+        } catch (\Exception $e) {
+            Log::error('ProjectController@store error', ['error' => $e->getMessage()]);
+            throw $e;
+        }
     }
 
     /**
@@ -107,7 +117,15 @@ class ProjectController extends Controller
     // GET /api/projects/{id}
     public function show($id)
     {
-        return Project::findOrFail($id);
+        Log::info('ProjectController@show called', ['id' => $id]);
+        try {
+            $project = Project::findOrFail($id);
+            Log::info('ProjectController@show success', ['id' => $id]);
+            return $project;
+        } catch (\Exception $e) {
+            Log::error('ProjectController@show error', ['id' => $id, 'error' => $e->getMessage()]);
+            throw $e;
+        }
     }
 
     /**
@@ -177,19 +195,22 @@ class ProjectController extends Controller
     // PUT/PATCH /api/projects/{id}
     public function update(Request $request, $id)
     {
-
-        $project = Project::findOrFail($id);
-
-        $validated = $request->validate([
-            'label' => 'required|string|max:255',
-            'tags' => 'nullable|array',
-            'tags.*' => 'string|max:255',
-        ]);
-
-        Log::info('Project [ID:'.$project->id.']'.' updated.', $validated);
-        $project->update($validated);
-
-        return response()->json($project);
+        Log::info('ProjectController@update called', ['id' => $id, 'data' => $request->all()]);
+        try {
+            $project = Project::findOrFail($id);
+            $validated = $request->validate([
+                'label' => 'required|string|max:255',
+                'tags' => 'nullable|array',
+                'tags.*' => 'string|max:255',
+            ]);
+            Log::info('ProjectController@update validated', $validated);
+            $project->update($validated);
+            Log::info('ProjectController@update success', ['id' => $project->id]);
+            return response()->json($project);
+        } catch (\Exception $e) {
+            Log::error('ProjectController@update error', ['id' => $id, 'error' => $e->getMessage()]);
+            throw $e;
+        }
     }
 
     /**
@@ -215,8 +236,14 @@ class ProjectController extends Controller
     // DELETE /api/projects/{id}
     public function destroy($id)
     {
-        Project::destroy($id);
-
-        return response()->json(null, 204);
+        Log::info('ProjectController@destroy called', ['id' => $id]);
+        try {
+            Project::destroy($id);
+            Log::info('ProjectController@destroy success', ['id' => $id]);
+            return response()->json(null, 204);
+        } catch (\Exception $e) {
+            Log::error('ProjectController@destroy error', ['id' => $id, 'error' => $e->getMessage()]);
+            throw $e;
+        }
     }
 }

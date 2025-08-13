@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # Laravel App
+  laravel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel-app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+      - ./storage:/var/www/storage
+      - ./database:/var/www/database
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - DB_CONNECTION=sqlite
+      - DB_DATABASE=/var/www/database/database.sqlite
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - redis
+    networks:
+      - laravel-network
+    command: composer run dev
+
+  # Vite Dev Server
+  vite:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vite-dev
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+      - ./node_modules:/var/www/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - laravel
+    networks:
+      - laravel-network
+    command: npm run dev -- --host 0.0.0.0
+
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - laravel-network
+
+networks:
+  laravel-network:
+    driver: bridge
+
+volumes:
+  redis_data:
+    driver: local

@@ -40,7 +40,7 @@ class DatabaseSeeder extends Seeder
                 'label' => 'E-commerce Platform '.$i,
                 'description' => 'Main e-commerce website monitoring.',
                 'tags' => ['production', 'ecommerce', 'critical'],
-                'user_id' => 1,
+                'user_id' => 2,
             ]);
         }
 
@@ -73,7 +73,7 @@ class DatabaseSeeder extends Seeder
 
         for ($i = 1; $i <= 20; $i++) {
             Monitor::factory()->create([
-                'project_id' => $project1->id,
+                'project_id' => $project2->id,
                 'monitor_type' => 'ping',
                 'label' => 'Server Health Check '.$i,
                 'hostname' => 'example.com',

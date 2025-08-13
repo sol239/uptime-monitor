@@ -13,6 +13,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Monitor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class MonitorController extends Controller
 {
@@ -36,6 +37,7 @@ class MonitorController extends Controller
      */
     public function index()
     {
+        Log::info('Fetching all monitors');
         return Monitor::all();
     }
 
@@ -62,7 +64,7 @@ class MonitorController extends Controller
     public function store(Request $request)
     {
         $monitor = Monitor::create($request->all());
-
+        Log::info('Monitor created', ['monitor' => $monitor]);
         return response()->json($monitor, 201);
     }
 
@@ -90,6 +92,11 @@ class MonitorController extends Controller
      */
     public function show(Monitor $monitor)
     {
+        if (!$monitor) {
+            Log::error('Monitor not found', ['monitor' => $monitor]);
+        } else {
+            Log::info('Monitor detail fetched', ['monitor' => $monitor]);
+        }
         return $monitor;
     }
 
@@ -124,7 +131,7 @@ class MonitorController extends Controller
     public function update(Request $request, Monitor $monitor)
     {
         $monitor->update($request->all());
-
+        Log::info('Monitor updated', ['monitor' => $monitor]);
         return $monitor;
     }
 
@@ -151,7 +158,7 @@ class MonitorController extends Controller
     public function destroy(Monitor $monitor)
     {
         $monitor->delete();
-
+        Log::info('Monitor deleted', ['monitor' => $monitor->id]);
         return response()->json(null, 204);
     }
 
@@ -188,7 +195,7 @@ class MonitorController extends Controller
     public function history(Monitor $monitor, Request $request)
     {
         $mode = $request->get('mode', 'status');
-
+        Log::info('Fetching monitor history', ['monitor' => $monitor->id, 'mode' => $mode]);
         $logs = $monitor->logs()->orderBy('started_at', 'desc');
 
         if ($mode === 'status') {
@@ -226,6 +233,7 @@ class MonitorController extends Controller
      */
     public function calendarSummary(Monitor $monitor)
     {
+        Log::info('Fetching calendar summary', ['monitor' => $monitor->id]);
         $logs = $monitor->logs()
             ->selectRaw('DATE(started_at) as date, COUNT(*) as total, SUM(CASE WHEN status = "failed" THEN 1 ELSE 0 END) as failed')
             ->groupBy('date')
