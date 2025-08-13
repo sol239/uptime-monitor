@@ -1,13 +1,17 @@
 {
     "private": true,
     "type": "module",
-    "scripts": {
+   "scripts": {
         "build": "vite build",
         "build:ssr": "vite build && vite build --ssr",
         "dev": "vite",
         "format": "prettier --write resources/",
         "format:check": "prettier --check resources/",
-        "lint": "eslint . --fix",
+        "lint:laravel": "php vendor/bin/pint",
+        "lint:laravel:test": "php vendor/bin/pint --test",
+        "lint:js": "eslint . --fix",
+        "lint:js:test": "eslint . ",
+        "lint": "eslint . --fix && php vendor/bin/pint",
         "cypress:open": "cypress open",
         "cypress:run": "cypress run"
     },
