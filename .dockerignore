@@ -1,0 +1,5 @@
+node_modules
+vendor
+public/storage
+.DS_Store
+.git

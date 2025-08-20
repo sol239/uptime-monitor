@@ -63,7 +63,6 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // TO TEST PAGINATION
-        /*
         for ($i = 1; $i <= 20; $i++) {
             Project::factory()->create([
                 'label' => 'E-commerce Platform '.$i,
@@ -128,7 +127,7 @@ class DatabaseSeeder extends Seeder
                 'keywords' => null,
                 'check_status' => null,
             ]);
-        }*/
+        }
         //-----------------------------------------------------------------
 
         Monitor::factory()->create([

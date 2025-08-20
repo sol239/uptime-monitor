@@ -22,7 +22,8 @@ const submit = () => {
 </script>
 
 <template>
-    <AuthLayout title="Forgot password" description="Enter your email to receive a password reset link">
+    <!--
+     <AuthLayout title="Forgot password" description="Enter your email to receive a password reset link">
         <Head title="Forgot password" />
 
         <div v-if="status" class="mb-4 text-center text-sm font-medium text-green-600">
@@ -49,6 +50,19 @@ const submit = () => {
                 <span>Or, return to</span>
                 <TextLink :href="route('login')">log in</TextLink>
             </div>
+        </div>
+    </AuthLayout>
+    -->
+
+    <!-- Some email provider would have to be configured to send the reset link and also the app would have
+     to be deployed somewhere. -->
+    <AuthLayout title="Forgot password" description="Please contact admin to reset your password">
+
+        <Head title="Forgot password" />
+
+        <div class="space-x-1 text-center text-sm text-muted-foreground">
+            <span>Return to</span>
+            <TextLink :href="route('login')">log in</TextLink>
         </div>
     </AuthLayout>
 </template>

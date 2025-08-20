@@ -1,51 +1,95 @@
-FROM php:8.3-fpm
+#Client App
+FROM node:latest as vuejs
 
-# Set working directory
-WORKDIR /var/www
+LABEL authors="Nimat Razmjo"
 
-# Install system dependencies
+RUN mkdir -p /app/public
+
+COPY package.json package-lock.json /app/
+COPY resources/ /app/resources/
+
+WORKDIR /app
+
+RUN npm install && npm run prod
+
+
+#Server Dependencies
+FROM composer:latest as vendor
+
+WORKDIR /app
+
+COPY database/ database/
+
+COPY composer.json composer.json
+COPY composer.lock composer.lock
+
+RUN composer install \
+    --ignore-platform-reqs \
+    --no-interaction \
+    --no-plugins \
+    --no-scripts \
+    --prefer-dist
+
+#Final Image
+FROM php:apache as base
+#install php dependencies
 RUN apt-get update && apt-get install -y \
-    git \
-    curl \
+    build-essential \
     libpng-dev \
     libonig-dev \
-    libxml2-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
+    locales \
+    libzip-dev \
     zip \
+    jpegoptim optipng pngquant gifsicle \
     unzip \
-    sqlite3 \
-    libsqlite3-dev \
-    nodejs \
-    npm
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN docker-php-ext-install pdo_mysql mbstring zip exif pcntl
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo pdo_sqlite mbstring exif pcntl bcmath gd
+# change the document root to /var/www/html/public
+RUN sed -i -e "s/html/html\/public/g" \
+    /etc/apache2/sites-enabled/000-default.conf
 
-# Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# enable apache mod_rewrite
+RUN a2enmod rewrite
 
-# Copy application files
-COPY . /var/www
+WORKDIR /var/www/html
 
-# Set proper permissions
-RUN chown -R www-data:www-data /var/www \
-    && chmod -R 755 /var/www/storage \
-    && chmod -R 755 /var/www/bootstrap/cache
+COPY . /var/www/html
+COPY --from=vendor /app/vendor/ /var/www/html/vendor/
+COPY --from=vuejs /app/public/js/ /var/www/html/public/js/
+COPY --from=vuejs /app/public/css/ /var/www/html/public/css/
+COPY --from=vuejs /app/mix-manifest.json /var/www/html/mix-manifest.json
 
-# Create SQLite database file if it doesn't exist
-RUN mkdir -p /var/www/database \
-    && touch /var/www/database/database.sqlite \
-    && chown -R www-data:www-data /var/www/database \
-    && chmod 664 /var/www/database/database.sqlite
 
-# Install dependencies
-RUN composer install --optimize-autoloader
-RUN npm install
 
-# Expose ports for Laravel and Vite
-EXPOSE 8000 5173
 
-# Keep container running for interactive development
-CMD ["tail", "-f", "/dev/null"]
+RUN rm -rf /var/www/html/public/storage
+
+
+# these directories need to be writable by Apache
+RUN chown -R www-data:www-data /var/www/html/storage \
+    /var/www/html/bootstrap/cache
+
+# copy env file for our Docker image
+# COPY env.docker /var/www/html/.env
+
+# create sqlite db structure
+RUN mkdir -p storage/app \
+    && touch storage/app/db.sqlite
+
+RUN chown -R www-data:www-data \
+    /var/www/html \
+    /var/www/html/storage \
+    /var/www/html/bootstrap/cache
+
+RUN chmod -R 775 /var/www/html/storage
+
+RUN php artisan key:generate --ansi \
+    && php artisan storage:link
+
+VOLUME ["/var/www/html/storage", "/var/www/html/bootstrap/cache"]
+
+EXPOSE 80

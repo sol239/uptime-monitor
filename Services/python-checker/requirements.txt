@@ -1,0 +1,4 @@
+aiohttp
+psutil
+mysql-connector-python
+dotenv

@@ -1,70 +1,40 @@
-version: '3.8'
-
 services:
-  # Laravel App
-  laravel:
+  server:
+    build: .
+    command: npm run watch
+    container_name: server
+    ports:
+      - "${HTTP_PORT}:8000"
+    volumes:
+      - ./:/var/www/
+      - /var/www/vendor
+    depends_on:
+      - mysql
+    links:
+      - mysql
+  mysql:
+    image: mysql
+    container_name: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - ${MYSQL_PORT}:3306
+    volumes:
+      - ./mysql/init.sql:/data/application/init.sql
+      - mysql_data:/var/lib/mysql
+  client:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: laravel-app
-    restart: unless-stopped
-    working_dir: /var/www
+      dockerfile: ./Dockerfile.node
+    container_name: client
     volumes:
-      - .:/var/www
-      - ./storage:/var/www/storage
-      - ./database:/var/www/database
-    ports:
-      - "8000:8000"
-    environment:
-      - APP_ENV=local
-      - APP_DEBUG=true
-      - DB_CONNECTION=sqlite
-      - DB_DATABASE=/var/www/database/database.sqlite
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      - ./:/var/www/
+      - /var/www/node_modules
     depends_on:
-      - redis
-    networks:
-      - laravel-network
-    command: composer run dev
-
-  # Vite Dev Server
-  vite:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: vite-dev
-    restart: unless-stopped
-    working_dir: /var/www
-    volumes:
-      - .:/var/www
-      - ./node_modules:/var/www/node_modules
-    ports:
-      - "5173:5173"
-    environment:
-      - NODE_ENV=development
-    depends_on:
-      - laravel
-    networks:
-      - laravel-network
-    command: npm run dev -- --host 0.0.0.0
-
-  # Redis for caching and sessions
-  redis:
-    image: redis:7-alpine
-    container_name: redis-cache
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - laravel-network
-
-networks:
-  laravel-network:
-    driver: bridge
-
+      - "server"
 volumes:
-  redis_data:
-    driver: local
+  mysql_data:
