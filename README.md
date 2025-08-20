@@ -16,7 +16,15 @@ docker-compose up -d
 ### Without Docker
 
 ```shell
-TODO
+git clone https://github.com/sol239/uptime-monitor
+cd uptime-monitor
+
+composer install
+npm install
+
+cp .env.example .env
+php artisan key:generate
+
 ```
 
 ## Testing
