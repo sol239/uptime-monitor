@@ -19,11 +19,48 @@ docker-compose up -d
 git clone https://github.com/sol239/uptime-monitor
 cd uptime-monitor
 
+# ===================================
+# Laravel Backend + Front End
+# ===================================
+
 composer install
 npm install
 
 cp .env.example .env
 php artisan key:generate
+
+php artisan migrate
+
+# Optionally: seeding the database with testing data --> for tests.
+php artisan db:seed
+
+# Run the Laravel development server
+php artisan serve
+
+# Run the front end
+npm run dev
+
+# ===================================
+# PHP Monitor Service
+# ===================================
+php services/php-checker/MonitorChecker.php
+
+# ===================================
+# Python Monitor Service
+# ===================================
+
+# Create virtual environment
+python -m venv services/python-checker/venv
+
+# Activate venv
+services/python-checker/venv/Scripts/activate  # Windows
+source services/python-checker/venv/bin/activate  # MacOS/Linux
+
+# Install required packages
+pip install -r services/python-checker/requirements.txt
+
+# Run the Python monitor service
+python services/python-checker/Main.py
 
 ```
 

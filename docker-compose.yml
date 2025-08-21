@@ -1,40 +1,53 @@
 services:
-  server:
-    build: .
-    command: npm run watch
-    container_name: server
-    ports:
-      - "${HTTP_PORT}:8000"
-    volumes:
-      - ./:/var/www/
-      - /var/www/vendor
-    depends_on:
-      - mysql
-    links:
-      - mysql
-  mysql:
-    image: mysql
-    container_name: mysql
-    command: --default-authentication-plugin=mysql_native_password
-    restart: always
-    environment:
-      MYSQL_DATABASE: ${DB_DATABASE}
-      MYSQL_USER: ${DB_USERNAME}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - ${MYSQL_PORT}:3306
-    volumes:
-      - ./mysql/init.sql:/data/application/init.sql
-      - mysql_data:/var/lib/mysql
-  client:
+  app:
     build:
       context: .
-      dockerfile: ./Dockerfile.node
-    container_name: client
+      dockerfile: Dockerfile
+    container_name: laravel-backend
+    working_dir: /var/www
     volumes:
-      - ./:/var/www/
-      - /var/www/node_modules
+      # Only mount source code folders you edit
+      - ./app:/var/www/app:cached
+      - ./routes:/var/www/routes:cached
+      - ./resources:/var/www/resources:cached
+      - ./public:/var/www/public:cached
+      - ./config:/var/www/config:cached  # Přidáno pro config soubory
+      - ./database:/var/www/database:cached  # Přidáno pro migrace a seeders
+    ports:
+      - 8000:8000
+    environment:
+      APP_ENV: local
+      APP_DEBUG: true
+      DB_CONNECTION: ${DB_CONNECTION}  # Explicitně nastaveno
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}  # Update to match MySQL external port
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
     depends_on:
-      - "server"
+      mysql:
+        condition: service_healthy  # Počká na zdravou MySQL
+
+  mysql:
+    image: mysql:8.0
+    container_name: laravel-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4 
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    ports:
+      - 33061:3306  # Change external port to 33061 to avoid conflict
+    volumes:
+      - mysql_data:/var/lib/mysql
+    # Health check pro MySQL
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+      interval: 10s
+      start_period: 40s
+
 volumes:
   mysql_data:

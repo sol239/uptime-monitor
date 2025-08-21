@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Database\QueryException;
 
 class LoginRequest extends FormRequest
 {
@@ -59,20 +60,26 @@ class LoginRequest extends FormRequest
      */
     public function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
-            return;
+        try {
+            if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+                return;
+            }
+
+            event(new Lockout($this));
+
+            $seconds = RateLimiter::availableIn($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => trans('auth.throttle', [
+                    'seconds' => $seconds,
+                    'minutes' => ceil($seconds / 60),
+                ]),
+            ]);
+        } catch (QueryException $e) {
+            throw ValidationException::withMessages([
+                'email' => 'Unable to connect to the database. Please try again later.',
+            ]);
         }
-
-        event(new Lockout($this));
-
-        $seconds = RateLimiter::availableIn($this->throttleKey());
-
-        throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
-                'seconds' => $seconds,
-                'minutes' => ceil($seconds / 60),
-            ]),
-        ]);
     }
 
     /**
