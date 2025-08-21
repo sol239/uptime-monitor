@@ -25,6 +25,7 @@ const form = ref({
     keywords: Array.isArray(monitor.value.keywords) ? monitor.value.keywords.join(', ') : '',
 });
 
+
 const historyMode = ref('status');
 const history = ref([]);
 const loadingHistory = ref(false);
@@ -297,6 +298,9 @@ const calendarSvgRects = computed(() => {
     });
     return rects;
 });
+
+// TODO: {project.value.label} in reality display eg. Project 1
+console.log("PROJECT: ", project.value)
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Projects', href: '/projects' },

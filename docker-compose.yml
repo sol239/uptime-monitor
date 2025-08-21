@@ -6,27 +6,27 @@ services:
     container_name: laravel-backend
     working_dir: /var/www
     volumes:
-      # Only mount source code folders you edit
+      # Caches are essential for performance
       - ./app:/var/www/app:cached
       - ./routes:/var/www/routes:cached
       - ./resources:/var/www/resources:cached
       - ./public:/var/www/public:cached
-      - ./config:/var/www/config:cached  # Přidáno pro config soubory
-      - ./database:/var/www/database:cached  # Přidáno pro migrace a seeders
+      - ./config:/var/www/config:cached 
+      - ./database:/var/www/database:cached 
     ports:
       - 8000:8000
     environment:
       APP_ENV: local
       APP_DEBUG: true
-      DB_CONNECTION: ${DB_CONNECTION}  # Explicitně nastaveno
+      DB_CONNECTION: ${DB_CONNECTION}
       DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}  # Update to match MySQL external port
+      DB_PORT: ${DB_PORT}
       DB_DATABASE: ${DB_DATABASE}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
     depends_on:
       mysql:
-        condition: service_healthy  # Počká na zdravou MySQL
+        condition: service_healthy
 
   mysql:
     image: mysql:8.0
@@ -38,9 +38,10 @@ services:
       MYSQL_CHARACTER_SET_SERVER: utf8mb4 
       MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
     ports:
-      - 33061:3306  # Change external port to 33061 to avoid conflict
+      - 33061:3306 # 3306:3306 causes conflicts
     volumes:
       - mysql_data:/var/lib/mysql
+
     # Health check pro MySQL
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
@@ -48,6 +49,20 @@ services:
       retries: 10
       interval: 10s
       start_period: 40s
+
+  # For database administration
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: laravel-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - 8080:80
+    depends_on:
+      - mysql
 
 volumes:
   mysql_data:
