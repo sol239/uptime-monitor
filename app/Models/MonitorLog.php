@@ -20,9 +20,12 @@ use Illuminate\Database\Eloquent\Model;
  * )
  */
 class MonitorLog extends Model
-{
+{   
     use HasFactory;
 
+    /*
+    * The attributes that are mass assignable.
+    */
     protected $fillable = [
         'monitor_id',
         'started_at',
@@ -30,12 +33,18 @@ class MonitorLog extends Model
         'response_time_ms',
     ];
 
+    /*
+    * The attributes that should be cast to native types.
+    */
     protected $casts = [
         'started_at' => 'datetime',
         'status' => 'string',
         'response_time_ms' => 'integer',
     ];
 
+    /*
+    * Get the monitor that owns the log.
+    */
     public function monitor()
     {
         return $this->belongsTo(Monitor::class);

@@ -7,6 +7,9 @@ use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
+/*
+    ProjectController handles the CRUD operations for projects.
+*/
 class ProjectController extends Controller
 {
     /**

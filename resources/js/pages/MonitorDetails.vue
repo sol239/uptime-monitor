@@ -1,18 +1,47 @@
 <script setup lang="ts">
+/* 1. Imports */
+import { ref, computed, reactive, onMounted, onUnmounted, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
+/* 2. Stores */
+// No Pinia stores used
+
+/* 3. Context hooks */
 const page = usePage();
+
+/* 4. Constants (non-reactive) */
+/** Interval for fetching logs (seconds) */
+const fetchInterval = 5;
+/** Breadcrumbs for navigation */
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Projects', href: '/projects' },
+    { title: `${page.props.project.label}`, href: `/projects/${page.props.project.id}` },
+    { title: 'Monitor Details', href: '#' },
+];
+
+/* 5. Props */
+// No props defined
+
+/* 6. Emits */
+// No emits defined
+
+/* 7. Template refs */
+// No template refs used
+
+/* 8. State (ref, reactive) */
+/** Monitor data */
 const monitor = ref(page.props.monitor);
+/** Project data */
 const project = ref(page.props.project);
-
+/** Success flag for save */
 const saveSuccess = ref(false);
+/** Show monitor form flag */
 const showMonitorForm = ref(false);
-
-const form = ref({
+/** Monitor form state */
+const form = reactive({
     label: monitor.value.label,
     periodicity: monitor.value.periodicity,
     monitor_type: monitor.value.monitor_type,
@@ -24,44 +53,272 @@ const form = ref({
     check_status: monitor.value.check_status || false,
     keywords: Array.isArray(monitor.value.keywords) ? monitor.value.keywords.join(', ') : '',
 });
-
-// Dynamic viewport handling
+/** Viewport height for dynamic sizing */
 const viewportHeight = ref(window.innerHeight);
+/** Logs data */
+const logsData = ref([]);
+const logsLoading = ref(false);
+/** Interval ID for polling */
+let intervalId: any = null;
+/** History view mode */
+const historyViewMode = ref('list'); // 'list', 'calendar', 'graph'
+/** List mode filters & pagination */
+const listFilters = reactive({
+    status: '',
+    startDate: '',
+    endDate: '',
+    page: 1,
+});
+/** Sorting state for history table */
+const sortState = reactive({
+    column: '', // 'started_at', 'status', 'response_time_ms'
+    direction: '', // '', 'asc', 'desc'
+});
 
-// Handle window resize
+/* 9. Computed */
+/**
+ * Calculate dynamic page size for list view
+ * @returns {number}
+ */
+const listPageSize = computed(() => {
+    const headerHeight = 200;
+    const monitorInfoHeight = showMonitorForm.value ? 400 : 200;
+    const filtersHeight = 60;
+    const paginationHeight = 40;
+    const tableHeaderHeight = 40;
+    const availableHeight = viewportHeight.value - headerHeight - monitorInfoHeight - filtersHeight - paginationHeight - tableHeaderHeight;
+    const rowHeight = 48;
+    const maxRows = Math.floor(availableHeight / rowHeight);
+    return Math.max(3, Math.min(15, maxRows));
+});
+
+/**
+ * Filtered and sorted monitor history logs
+ * @returns {Array<any>}
+ */
+const filteredListHistory = computed(() => {
+    let filtered = [...logsData.value];
+    if (listFilters.startDate) {
+        filtered = filtered.filter((log) => log.started_at >= listFilters.startDate);
+    }
+    if (listFilters.endDate) {
+        filtered = filtered.filter((log) => log.started_at <= listFilters.endDate);
+    }
+    if (sortState.column) {
+        filtered.sort((a, b) => {
+            let valA = a[sortState.column];
+            let valB = b[sortState.column];
+            if (sortState.column === 'started_at') {
+                valA = new Date(valA);
+                valB = new Date(valB);
+            }
+            if (sortState.direction === 'asc') {
+                return valA > valB ? 1 : valA < valB ? -1 : 0;
+            } else if (sortState.direction === 'desc') {
+                return valA < valB ? 1 : valA > valB ? -1 : 0;
+            }
+            return 0;
+        });
+    }
+    return filtered;
+});
+
+/**
+ * Paginated history logs for current page
+ * @returns {Array<any>}
+ */
+const paginatedListHistory = computed(() => {
+    const start = (listFilters.page - 1) * listPageSize.value;
+    const end = start + listPageSize.value;
+    return filteredListHistory.value.slice(start, end);
+});
+
+/**
+ * Total pages for list history
+ * @returns {number}
+ */
+const listTotalPages = computed(() => Math.ceil(filteredListHistory.value.length / listPageSize.value));
+
+/**
+ * Calendar data summary by day
+ * @returns {Record<string, {total:number,failed:number,succeeded:number}>}
+ */
+const calendarData = computed(() => {
+    const data = {};
+    logsData.value.forEach((log) => {
+        const date = log.started_at.split('T')[0];
+        if (!data[date]) {
+            data[date] = { total: 0, failed: 0, succeeded: 0 };
+        }
+        data[date].total++;
+        if (log.status === 'failed') {
+            data[date].failed++;
+        } else if (log.status === 'succeeded') {
+            data[date].succeeded++;
+        }
+    });
+    return data;
+});
+
+/**
+ * Calendar days for last 3 months
+ * @returns {Array<any>}
+ */
+const calendarDays = computed(() => {
+    const days = [];
+    const today = new Date();
+    today.setDate(today.getDate() + 1);
+    const threeMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 2, 1);
+    const currentDate = new Date(threeMonthsAgo);
+    while (currentDate <= today) {
+        const dateStr = currentDate.toISOString().split('T')[0];
+        const summary = calendarData.value[dateStr];
+        let color = '#2d3748';
+        let status = 'No data';
+        if (summary && summary.total > 0) {
+            const failureRate = summary.failed / summary.total;
+            if (failureRate === 0) {
+                color = '#22c55e';
+                status = `Perfect (${summary.total} checks)`;
+            } else if (failureRate <= 0.05) {
+                color = '#f59e0b';
+                status = `Good (${summary.failed} failed / ${summary.total} total)`;
+            } else {
+                color = '#ef4444';
+                status = `Issues (${summary.failed} failed / ${summary.total} total)`;
+            }
+        }
+        const d = new Date(currentDate);
+        days.push({
+            date: d,
+            dateStr,
+            color,
+            status,
+            summary,
+        });
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+    return days;
+});
+
+/**
+ * Calendar SVG rectangles for each day
+ * @returns {Array<any>}
+ */
+const calendarSvgRects = computed(() => {
+    const rects = [];
+    const days = calendarDays.value;
+    days.forEach((day, idx) => {
+        let fill = '#2d3748';
+        let fillOpacity = 1;
+        let percent = '';
+        if (day.summary && day.summary.total > 0) {
+            const rate = (day.summary.total - day.summary.failed) / day.summary.total;
+            percent = (rate * 100).toFixed(3) + '%';
+            if (day.summary.failed === 0) {
+                fill = '#3bd671';
+                fillOpacity = 1;
+            } else if (rate >= 0.95) {
+                fill = '#f29030';
+                fillOpacity = 1;
+            } else {
+                fill = '#ef4444';
+                fillOpacity = 1;
+            }
+            if (fill === '#3bd671' && rate < 1) fillOpacity = 0.5;
+        }
+        rects.push({
+            x: idx * 5.9,
+            fill,
+            fillOpacity,
+            date: day.dateStr,
+            percent,
+        });
+    });
+    return rects;
+});
+
+/**
+ * Dynamic graph width based on viewport
+ * @returns {number}
+ */
+const graphWidth = computed(() => {
+    const availableWidth = Math.min(viewportHeight.value * 0.8, 800);
+    return Math.max(500, availableWidth);
+});
+
+/**
+ * Dynamic graph height based on viewport
+ * @returns {number}
+ */
+const graphHeight = computed(() => {
+    const availableHeight = viewportHeight.value * 0.3;
+    return Math.max(200, Math.min(400, availableHeight));
+});
+
+/**
+ * Graph data for response time
+ * @returns {Array<any>}
+ */
+const graphData = computed(() => {
+    let filtered = [...logsData.value];
+    if (listFilters.startDate) {
+        filtered = filtered.filter((log) => log.started_at >= listFilters.startDate);
+    }
+    if (listFilters.endDate) {
+        filtered = filtered.filter((log) => log.started_at <= listFilters.endDate);
+    }
+    filtered = filtered.sort((a, b) => new Date(a.started_at) - new Date(b.started_at));
+    if (!listFilters.startDate && !listFilters.endDate) {
+        return filtered.slice(-30);
+    }
+    return filtered;
+});
+
+/* 10. Watchers */
+/** Watch for window resize to update viewport height */
+onMounted(() => {
+    window.addEventListener('resize', handleResize);
+});
+onUnmounted(() => {
+    window.removeEventListener('resize', handleResize);
+});
+/** Watch saveSuccess to auto-hide message */
+watch(saveSuccess, (v) => {
+    if (v) setTimeout(() => (saveSuccess.value = false), 1000);
+});
+/** Watch historyViewMode to refresh graph */
+watch(historyViewMode, (mode) => {
+    if (mode === 'graph') {
+        fetchSingleLog();
+    }
+});
+
+/* 11. Methods */
+/**
+ * Handle window resize event
+ */
 function handleResize() {
     viewportHeight.value = window.innerHeight;
 }
 
-onMounted(() => {
-    window.addEventListener('resize', handleResize);
-});
-
-onUnmounted(() => {
-    window.removeEventListener('resize', handleResize);
-});
-let intervalId: any = null;
-
-// Unified logs data - replaces separate data sources
-const logsData = ref([]);
-const logsLoading = ref(false);
-const fetchInterval = 5; // seconds
-
-// Save monitor handler
+/**
+ * Save monitor via API
+ */
 function saveMonitor() {
     const payload: any = {
-        label: form.value.label,
-        periodicity: form.value.periodicity,
-        monitor_type: form.value.monitor_type,
-        badge_label: form.value.badge_label,
+        label: form.label,
+        periodicity: form.periodicity,
+        monitor_type: form.monitor_type,
+        badge_label: form.badge_label,
     };
-    if (form.value.monitor_type === 'ping') {
-        payload.hostname = form.value.hostname;
-        payload.port = form.value.port;
-    } else if (form.value.monitor_type === 'website') {
-        payload.url = form.value.url;
-        payload.check_status = form.value.check_status;
-        payload.keywords = form.value.keywords
+    if (form.monitor_type === 'ping') {
+        payload.hostname = form.hostname;
+        payload.port = form.port;
+    } else if (form.monitor_type === 'website') {
+        payload.url = form.url;
+        payload.check_status = form.check_status;
+        payload.keywords = form.keywords
             .split(',')
             .map((k) => k.trim())
             .filter(Boolean);
@@ -77,22 +334,17 @@ function saveMonitor() {
     console.log('Form data:', payload);
 }
 
-watch(saveSuccess, (v) => {
-    if (v) setTimeout(() => (saveSuccess.value = false), 1000);
-});
-
-// Updated unified fetch function
+/**
+ * Fetch logs for monitor
+ * @returns {Promise<any>}
+ */
 async function fetchSingleLog() {
     logsLoading.value = true;
     try {
-        console.log('Fetching data for monitor: ', monitor.value.id);
         const { data } = await axios.get(`/api/v1/monitors/${monitor.value.id}/logs`);
         logsData.value = data.logs || [];
-        // Set monitor.status to latest log status if available
-        console.log('Fetched logs data:', logsData.value);
         if (logsData.value.length > 0) {
             monitor.value.status = logsData.value[0].status;
-            console.log(monitor.value.status);
         }
         return data;
     } catch (e) {
@@ -104,156 +356,12 @@ async function fetchSingleLog() {
     }
 }
 
-// Remove old history fetch function and replace with unified approach
-onMounted(() => {
-    fetchSingleLog();
-    intervalId = setInterval(fetchSingleLog, fetchInterval * 1000);
-});
-onUnmounted(() => {
-    clearInterval(intervalId);
-});
-
-// History view mode
-const historyViewMode = ref('list'); // 'list', 'calendar', 'graph'
-
-// List mode filters & pagination - now dynamic
-const listFilters = ref({
-    status: '',
-    startDate: '',
-    endDate: '',
-    page: 1,
-});
-
-// Calculate dynamic page size for list view
-const listPageSize = computed(() => {
-    // Estimate available height for history table
-    const headerHeight = 200; // header, title, etc.
-    const monitorInfoHeight = showMonitorForm.value ? 400 : 200; // monitor info section
-    const filtersHeight = 60; // filters row
-    const paginationHeight = 40; // pagination controls
-    const tableHeaderHeight = 40; // table header
-    const availableHeight = viewportHeight.value - headerHeight - monitorInfoHeight - filtersHeight - paginationHeight - tableHeaderHeight;
-
-    // Each row is approximately 48px
-    const rowHeight = 48;
-    const maxRows = Math.floor(availableHeight / rowHeight);
-
-    // Minimum 3 rows, maximum 15 rows
-    return Math.max(3, Math.min(15, maxRows));
-});
-
-const filteredListHistory = computed(() => {
-    let filtered = [...logsData.value];
-
-    // Remove status filter (no longer needed)
-    // if (listFilters.value.status) {
-    //     filtered = filtered.filter((log) => log.status === listFilters.value.status);
-    // }
-
-    // Apply date filters
-    if (listFilters.value.startDate) {
-        filtered = filtered.filter((log) => log.started_at >= listFilters.value.startDate);
-    }
-    if (listFilters.value.endDate) {
-        filtered = filtered.filter((log) => log.started_at <= listFilters.value.endDate);
-    }
-
-    // Sorting
-    if (sortState.value.column) {
-        filtered.sort((a, b) => {
-            let valA = a[sortState.value.column];
-            let valB = b[sortState.value.column];
-            if (sortState.value.column === 'started_at') {
-                valA = new Date(valA);
-                valB = new Date(valB);
-            }
-            if (sortState.value.direction === 'asc') {
-                return valA > valB ? 1 : valA < valB ? -1 : 0;
-            } else if (sortState.value.direction === 'desc') {
-                return valA < valB ? 1 : valA > valB ? -1 : 0;
-            }
-            return 0;
-        });
-    }
-
-    return filtered;
-});
-
-const paginatedListHistory = computed(() => {
-    const start = (listFilters.value.page - 1) * listPageSize.value;
-    const end = start + listPageSize.value;
-    return filteredListHistory.value.slice(start, end);
-});
-
-const listTotalPages = computed(() => Math.ceil(filteredListHistory.value.length / listPageSize.value));
-
-// Updated calendar mode - uses logsData
-const calendarData = computed(() => {
-    const data = {};
-    logsData.value.forEach((log) => {
-        const date = log.started_at.split('T')[0]; // Extract YYYY-MM-DD
-        if (!data[date]) {
-            data[date] = { total: 0, failed: 0, succeeded: 0 };
-        }
-        data[date].total++;
-        if (log.status === 'failed') {
-            data[date].failed++;
-        } else if (log.status === 'succeeded') {
-            data[date].succeeded++;
-        }
-    });
-    return data;
-});
-
-// GitHub-style calendar with 3 months of data
-const calendarDays = computed(() => {
-    const days = [];
-    const today = new Date();
-    today.setDate(today.getDate() + 1);
-    const threeMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 2, 1);
-
-    // Start from the beginning of 3 months ago
-    const currentDate = new Date(threeMonthsAgo);
-
-    // Generate all days for 3 months
-    while (currentDate <= today) {
-        const dateStr = currentDate.toISOString().split('T')[0];
-        const summary = calendarData.value[dateStr];
-
-        let color = '#2d3748'; // Default gray for no data
-        let status = 'No data';
-
-        if (summary && summary.total > 0) {
-            const failureRate = summary.failed / summary.total;
-            if (failureRate === 0) {
-                color = '#22c55e'; // Green - no failures
-                status = `Perfect (${summary.total} checks)`;
-            } else if (failureRate <= 0.05) {
-                color = '#f59e0b'; // Orange - <= 5% failures
-                status = `Good (${summary.failed} failed / ${summary.total} total)`;
-            } else {
-                color = '#ef4444'; // Red - > 5% failures
-                status = `Issues (${summary.failed} failed / ${summary.total} total)`;
-            }
-        }
-
-        const d = new Date(currentDate);
-
-        days.push({
-            date: d,
-            dateStr,
-            color,
-            status,
-            summary,
-        });
-
-        currentDate.setDate(currentDate.getDate() + 1);
-    }
-    return days;
-});
-
-// Date formatting helper
-const formatDateTime = (dateString: string) => {
+/**
+ * Format date/time string as UTC
+ * @param {string} dateString
+ * @returns {string}
+ */
+function formatDateTime(dateString: string) {
     const date = new Date(dateString);
     const year = date.getUTCFullYear();
     const month = String(date.getUTCMonth() + 1).padStart(2, '0');
@@ -262,87 +370,13 @@ const formatDateTime = (dateString: string) => {
     const minutes = String(date.getUTCMinutes()).padStart(2, '0');
     const seconds = String(date.getUTCSeconds()).padStart(2, '0');
     return `${year}/${month}/${day} ${hours}:${minutes}:${seconds} UTC`;
-};
+}
 
-// Graph mode data
-const graphData = computed(() => {
-    let filtered = [...logsData.value];
-    // Apply date filters for graph
-    if (listFilters.value.startDate) {
-        filtered = filtered.filter((log) => log.started_at >= listFilters.value.startDate);
-    }
-    if (listFilters.value.endDate) {
-        filtered = filtered.filter((log) => log.started_at <= listFilters.value.endDate);
-    }
-    filtered = filtered.sort((a, b) => new Date(a.started_at) - new Date(b.started_at));
-    // Only show last 30 if no date filter is set
-    if (!listFilters.value.startDate && !listFilters.value.endDate) {
-        return filtered.slice(-30);
-    }
-    return filtered;
-});
-
-// Ensure graph updates when switching to graph mode
-watch(historyViewMode, (mode) => {
-    if (mode === 'graph') {
-        // Force recompute by updating a dummy ref if needed, or just trigger fetchSingleLog
-        fetchSingleLog();
-    }
-});
-
-const calendarSvgRects = computed(() => {
-    // Each rect is 3.25px wide, 15px high, 5.9px apart (from your example)
-    const rects = [];
-    const days = calendarDays.value;
-    days.forEach((day, idx) => {
-        let fill = '#2d3748';
-        let fillOpacity = 1;
-        let percent = '';
-        if (day.summary && day.summary.total > 0) {
-            const rate = (day.summary.total - day.summary.failed) / day.summary.total;
-            percent = (rate * 100).toFixed(3) + '%';
-            if (day.summary.failed === 0) {
-                fill = '#3bd671'; // green
-                fillOpacity = 1;
-            } else if (rate >= 0.95) {
-                fill = '#f29030'; // orange
-                fillOpacity = 1;
-            } else {
-                fill = '#ef4444'; // red
-                fillOpacity = 1;
-            }
-            // If not perfect, but still green, lower opacity
-            if (fill === '#3bd671' && rate < 1) fillOpacity = 0.5;
-        }
-        rects.push({
-            x: idx * 5.9,
-            fill,
-            fillOpacity,
-            date: day.dateStr,
-            percent,
-        });
-    });
-    return rects;
-});
-
-// Dynamic graph dimensions based on viewport
-const graphWidth = computed(() => {
-    const availableWidth = Math.min(viewportHeight.value * 0.8, 800);
-    return Math.max(500, availableWidth);
-});
-
-const graphHeight = computed(() => {
-    const availableHeight = viewportHeight.value * 0.3;
-    return Math.max(200, Math.min(400, availableHeight));
-});
-
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Projects', href: '/projects' },
-    { title: `${project.value.label}`, href: `/projects/${project.value.id}` },
-    { title: 'Monitor Details', href: '#' },
-];
-
-// Function to split and trim badge labels
+/**
+ * Split and trim badge labels
+ * @param {string} badgeLabel
+ * @returns {string[]}
+ */
 function getBadgeLabels(badgeLabel: string): string[] {
     if (!badgeLabel) return [];
     return badgeLabel
@@ -351,53 +385,54 @@ function getBadgeLabels(badgeLabel: string): string[] {
         .filter(Boolean);
 }
 
-// Sorting state for history table
-const sortState = ref({
-    column: '', // 'started_at', 'status', 'response_time_ms'
-    direction: '', // '', 'asc', 'desc'
-});
-
-// Sorting handler
+/**
+ * Cycle sort direction for history table
+ * @param {string} column
+ */
 function cycleSort(column: string) {
-    if (sortState.value.column !== column) {
-        sortState.value.column = column;
-        sortState.value.direction = 'asc';
-    } else if (sortState.value.direction === 'asc') {
-        sortState.value.direction = 'desc';
-    } else if (sortState.value.direction === 'desc') {
-        sortState.value.column = '';
-        sortState.value.direction = '';
+    if (sortState.column !== column) {
+        sortState.column = column;
+        sortState.direction = 'asc';
+    } else if (sortState.direction === 'asc') {
+        sortState.direction = 'desc';
+    } else if (sortState.direction === 'desc') {
+        sortState.column = '';
+        sortState.direction = '';
     } else {
-        sortState.value.direction = 'asc';
+        sortState.direction = 'asc';
     }
 }
 
-// Add function to reset form to monitor values
+/**
+ * Reset monitor form to current monitor values
+ */
 function resetMonitorForm() {
-    form.value.label = monitor.value.label;
-    form.value.periodicity = monitor.value.periodicity;
-    form.value.monitor_type = monitor.value.monitor_type;
-    form.value.badge_label = monitor.value.badge_label || '';
-    form.value.hostname = monitor.value.hostname || '';
-    form.value.port = monitor.value.port || null;
-    form.value.url = monitor.value.url || '';
-    form.value.check_status = monitor.value.check_status || false;
-    form.value.keywords = Array.isArray(monitor.value.keywords) ? monitor.value.keywords.join(', ') : '';
+    form.label = monitor.value.label;
+    form.periodicity = monitor.value.periodicity;
+    form.monitor_type = monitor.value.monitor_type;
+    form.badge_label = monitor.value.badge_label || '';
+    form.hostname = monitor.value.hostname || '';
+    form.port = monitor.value.port || null;
+    form.url = monitor.value.url || '';
+    form.check_status = monitor.value.check_status || false;
+    form.keywords = Array.isArray(monitor.value.keywords) ? monitor.value.keywords.join(', ') : '';
 }
 
-// Helper to group calendar SVG rects by month
+/**
+ * Group calendar SVG rects by month
+ * @param {any[]} rects
+ * @returns {Array<{label:string,rects:any[]}>}
+ */
 function groupRectsByMonth(rects: any[]) {
     const months: any[] = [];
     let currentMonth = '';
     let currentYear = '';
     let monthRects: any[] = [];
     let monthLabel = '';
-
     rects.forEach((rect) => {
         const dateObj = new Date(rect.date);
         const month = dateObj.getMonth();
         const year = dateObj.getFullYear();
-
         if (currentMonth === '' || month !== currentMonth || year !== currentYear) {
             if (monthRects.length > 0) {
                 months.push({ label: monthLabel, rects: monthRects });
@@ -414,6 +449,19 @@ function groupRectsByMonth(rects: any[]) {
     }
     return months;
 }
+
+/* 12. Lifecycle */
+onMounted(() => {
+    fetchSingleLog();
+    intervalId = setInterval(fetchSingleLog, fetchInterval * 1000);
+});
+onUnmounted(() => {
+    clearInterval(intervalId);
+});
+
+/* 13. defineExpose */
+// No expose needed for this page
+
 </script>
 
 <template>

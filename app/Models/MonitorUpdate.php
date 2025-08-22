@@ -21,15 +21,24 @@ class MonitorUpdate extends Model
 {
     use HasFactory;
 
+    /**
+     * The attributes that are mass assignable.
+     */
     protected $fillable = [
         'monitor_id',
         'must_update',
     ];
 
+    /**
+     * The attributes that should be cast to native types.
+     */
     protected $casts = [
         'must_update' => 'boolean',
     ];
 
+    /**
+     * Get the monitor that owns the update.
+     */
     public function monitor()
     {
         return $this->belongsTo(Monitor::class);

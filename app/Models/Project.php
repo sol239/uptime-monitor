@@ -24,6 +24,9 @@ class Project extends Model
     /** @use HasFactory<\Database\Factories\ProjectFactory> */
     use HasFactory;
 
+    /**
+     * The attributes that are mass assignable.
+     */
     protected $fillable = [
         'label',
         'description',
@@ -36,6 +39,9 @@ class Project extends Model
         'tags' => 'array',
     ];*/
 
+    /*
+    * The attributes that should be cast to native types.
+    */
     protected function casts(): array
     {
         return [
@@ -43,11 +49,17 @@ class Project extends Model
         ];
     }
 
+    /**
+     * Get the user that owns the project.
+     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Get the monitors for the project.
+     */
     public function monitors()
     {
         return $this->hasMany(Monitor::class);

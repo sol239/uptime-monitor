@@ -169,8 +169,6 @@ class MonitorChecker
                 echo "Status code check failed.\n";
             }
             if ($status === 'succeeded' && $keywords) {
-                // TODO: FIX WEBISTE MONITOR
-
                 echo $keywords;
 
                 foreach ($keywords as $keyword) {
@@ -335,7 +333,6 @@ class MonitorChecker
     {
         echo "=== Running main loop ===\n";
 
-        // TODO: THIS METHOD WILL RUN IN LOOP
         while (true) {
             $currentTime = time();
 

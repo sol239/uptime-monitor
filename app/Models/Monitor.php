@@ -37,6 +37,9 @@ class Monitor extends Model
 {
     use HasFactory;
 
+    /**
+     * The attributes that are mass assignable.
+     */
     protected $fillable = [
         'project_id',
         'label',
@@ -53,6 +56,9 @@ class Monitor extends Model
         'keywords',       // List of keywords - monitor is 'failed' if any keyword is not in response
     ];
 
+    /**
+     * The attributes that should be cast to native types.
+     */
     protected function casts(): array
     {
         return [
@@ -64,16 +70,25 @@ class Monitor extends Model
         ];
     }
 
+    /**
+     * Set the periodicity attribute.
+     */
     public function setPeriodicityAttribute($value)
     {
         $this->attributes['periodicity'] = max(5, min(300, (int)$value));
     }
 
+    /**
+     * Get the project that owns the monitor.
+     */
     public function project()
     {
         return $this->belongsTo(Project::class);
     }
 
+    /**
+     * Get the logs for the monitor.
+     */
     public function logs()
     {
         return $this->hasMany(MonitorLog::class);

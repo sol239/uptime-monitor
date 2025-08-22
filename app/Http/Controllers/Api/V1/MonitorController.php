@@ -7,6 +7,9 @@ use App\Models\Monitor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * MonitorController handles the CRUD operations for monitors.
+ */
 class MonitorController extends Controller
 {
     /**

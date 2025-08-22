@@ -1,29 +1,55 @@
 <script setup lang="ts">
+/* 1. Imports */
+import { ref, computed, reactive, onMounted, onUnmounted, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
-const saveSuccess = ref(false);
+/* 2. Stores */
+// No Pinia stores used
 
+/* 3. Context hooks */
 const page = usePage();
-const project = page.props.project;
 
-// Project form state
+/* 4. Constants (non-reactive) */
+/** Breadcrumbs for navigation */
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Projects', href: '/projects' },
+    { title: `${page.props.project.label}`, href: `/projects/${page.props.project.id}` },
+];
+
+/* 5. Props */
+// No props defined
+
+/* 6. Emits */
+// No emits defined
+
+/* 7. Template refs */
+// No template refs used
+
+/* 8. State (ref, reactive) */
+/** Success flag for save */
+const saveSuccess = ref(false);
+/** Project data */
+const project = page.props.project;
+/** Show project form flag */
 const showProjectForm = ref(false);
-const form = ref({
+/** Project form state */
+const form = reactive({
     label: project?.label ?? '',
     description: project?.description ?? '',
     tags: Array.isArray(project?.tags) ? project.tags : [],
 });
-const tagsInput = ref(form.value.tags.join(', '));
-
-// Monitor form state
+/** Tags input for project form */
+const tagsInput = ref(form.tags.join(', '));
+/** Show create monitor form flag */
 const showCreateForm = ref(false);
+/** Show edit monitor form flag */
 const showEditForm = ref(false);
+/** Editing monitor object */
 const editingMonitor = ref<any>(null);
-
+/** Monitor form fields */
 const monitorLabel = ref('');
 const monitorType = ref('ping');
 const monitorPeriodicity = ref<number | null>(null);
@@ -34,75 +60,68 @@ const monitorPort = ref<number | null>(null);
 const monitorUrl = ref('');
 const monitorCheckStatus = ref(false);
 const monitorKeywords = ref('');
-
-// Add missing monitors ref - initialize with data from backend
+/** Monitors list */
 const monitors = ref(page.props.monitors || []);
-
-// Monitor filters - now just label
+/** Monitor filters */
 const filterLabel = ref('');
-
-// Add sorting for type and status
 const typeDirection = ref<'all' | 'ping' | 'website'>('all');
 const statusDirection = ref<'all' | 'succeeded' | 'failed'>('all');
-
-// Pagination state - now dynamic
+/** Pagination state */
 const viewportHeight = ref(window.innerHeight);
 const currentPage = ref(1);
 
-// Calculate items per page based on viewport height
+/* 9. Computed */
+/**
+ * Calculate items per page based on viewport height
+ * @returns {number}
+ */
 const pageSize = computed(() => {
-    // Estimate available height for table
-    const headerHeight = 300; // approximate height of header, project info, filters, etc.
-    const paginationHeight = 80; // pagination controls height
-    const tableHeaderHeight = 50; // table header height
+    const headerHeight = 300;
+    const paginationHeight = 80;
+    const tableHeaderHeight = 50;
     const availableHeight = viewportHeight.value - headerHeight - paginationHeight - tableHeaderHeight;
-
-    // Each row is approximately 56px (h-14 class)
     const rowHeight = 56;
     const maxRows = Math.floor(availableHeight / rowHeight);
-
-    // Minimum 5 rows, maximum 20 rows
     return Math.max(5, Math.min(20, maxRows));
 });
 
-// Handle window resize
-function handleResize() {
-    viewportHeight.value = window.innerHeight;
-}
+/**
+ * Filtered monitors based on label, type, and status
+ * @returns {Array<any>}
+ */
+const filteredMonitors = computed(() => {
+    return monitors.value.filter((m) => {
+        const labelMatch = !filterLabel.value || m.label.includes(filterLabel.value);
+        const typeMatch = typeDirection.value === 'all' || m.monitor_type === typeDirection.value;
+        const statusMatch = statusDirection.value === 'all' || m.status === statusDirection.value;
+        return labelMatch && typeMatch && statusMatch;
+    });
+});
 
+/**
+ * Paginated monitors for current page
+ * @returns {Array<any>}
+ */
+const paginatedMonitors = computed(() => {
+    const start = (currentPage.value - 1) * pageSize.value;
+    return filteredMonitors.value.slice(start, start + pageSize.value);
+});
+
+/**
+ * Total pages for monitors table
+ * @returns {number}
+ */
+const totalPages = computed(() => Math.ceil(filteredMonitors.value.length / pageSize.value));
+
+/* 10. Watchers */
+/** Watch for window resize to update viewport height */
 onMounted(() => {
     window.addEventListener('resize', handleResize);
 });
-
 onUnmounted(() => {
     window.removeEventListener('resize', handleResize);
 });
-
-// Save project handler
-function save() {
-    // Parse tags from input
-    form.value.tags = tagsInput.value
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean);
-
-    // Call API to update project
-    axios
-        .put(`/api/v1/projects/${project.id}`, {
-            label: form.value.label,
-            tags: form.value.tags,
-        })
-        .then((response) => {
-            console.log('Project updated successfully:', response.data);
-            saveSuccess.value = true;
-        })
-        .catch((error) => {
-            console.error('Failed to update project:', error);
-            // You might want to show an error message to the user here
-        });
-}
-
-// Animated success message
+/** Watch saveSuccess to auto-hide message */
 watch(saveSuccess, (value) => {
     if (value) {
         setTimeout(() => {
@@ -111,11 +130,41 @@ watch(saveSuccess, (value) => {
     }
 });
 
-// Create monitor handler
+/* 11. Methods */
+/**
+ * Handle window resize event
+ */
+function handleResize() {
+    viewportHeight.value = window.innerHeight;
+}
+
+/**
+ * Save project via API
+ */
+function save() {
+    form.tags = tagsInput.value
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean);
+    axios
+        .put(`/api/v1/projects/${project.id}`, {
+            label: form.label,
+            tags: form.tags,
+        })
+        .then((response) => {
+            saveSuccess.value = true;
+        })
+        .catch((error) => {
+            console.error('Failed to update project:', error);
+        });
+}
+
+/**
+ * Create monitor via API
+ */
 function createMonitor() {
     if (!monitorLabel.value || !monitorType.value || !monitorPeriodicity.value) return;
-
-    const newMonitor = {
+    const newMonitor: any = {
         label: monitorLabel.value,
         type: monitorType.value,
         periodicity: monitorPeriodicity.value,
@@ -123,8 +172,6 @@ function createMonitor() {
         status: monitorStatus.value,
         project_id: project.id,
     };
-
-    // Add type-specific fields
     if (monitorType.value === 'ping') {
         newMonitor.hostname = monitorHostname.value;
         newMonitor.port = monitorPort.value;
@@ -136,7 +183,6 @@ function createMonitor() {
             .map((k) => k.trim())
             .filter((k) => k);
     }
-
     axios
         .post('/api/v1/monitors', newMonitor)
         .then((response) => {
@@ -149,6 +195,9 @@ function createMonitor() {
         });
 }
 
+/**
+ * Reset monitor form fields
+ */
 function resetMonitorForm() {
     monitorLabel.value = '';
     monitorType.value = 'ping';
@@ -162,7 +211,10 @@ function resetMonitorForm() {
     monitorKeywords.value = '';
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+/**
+ * Open edit monitor form
+ * @param {any} monitor
+ */
 function openEditForm(monitor: any) {
     editingMonitor.value = monitor;
     monitorLabel.value = monitor.label;
@@ -170,7 +222,6 @@ function openEditForm(monitor: any) {
     monitorPeriodicity.value = monitor.periodicity;
     monitorBadgeLabel.value = monitor.badge_label || '';
     monitorStatus.value = monitor.status;
-
     if (monitor.monitor_type === 'ping') {
         monitorHostname.value = monitor.hostname || '';
         monitorPort.value = monitor.port;
@@ -179,22 +230,21 @@ function openEditForm(monitor: any) {
         monitorCheckStatus.value = monitor.check_status || false;
         monitorKeywords.value = (monitor.keywords || []).join(', ');
     }
-
     showEditForm.value = true;
 }
 
+/**
+ * Update monitor via API
+ */
 function updateMonitor() {
     if (!editingMonitor.value) return;
-
-    const updatedMonitor = {
+    const updatedMonitor: any = {
         label: monitorLabel.value,
         type: monitorType.value,
         periodicity: monitorPeriodicity.value,
         badge_label: monitorBadgeLabel.value,
         status: monitorStatus.value,
     };
-
-    // Add type-specific fields
     if (monitorType.value === 'ping') {
         updatedMonitor.hostname = monitorHostname.value;
         updatedMonitor.port = monitorPort.value;
@@ -206,9 +256,6 @@ function updateMonitor() {
             .map((k) => k.trim())
             .filter((k) => k);
     }
-
-    console.log('Updating monitor [ID]: ', editingMonitor.value.id, updatedMonitor);
-
     axios
         .put(`/api/v1/monitors/${editingMonitor.value.id}`, updatedMonitor)
         .then((response) => {
@@ -225,51 +272,42 @@ function updateMonitor() {
         });
 }
 
+/**
+ * Cancel edit monitor form
+ */
 function cancelEdit() {
     resetMonitorForm();
     showEditForm.value = false;
     editingMonitor.value = null;
 }
 
-// Delete monitor handler
+/**
+ * Delete monitor by id
+ * @param {number} id
+ */
 function deleteMonitor(id: number) {
     monitors.value = monitors.value.filter((m) => m.id !== id);
     axios
         .delete(`/api/v1/monitors/${id}`)
         .then(() => {
-            console.log('Monitor successfully deleted.');
+            // Monitor deleted
         })
         .catch((err) => {
             console.error('Failed to delete monitor', err);
         });
 }
 
-// Computed filtered monitors
-const filteredMonitors = computed(() => {
-    return monitors.value.filter((m) => {
-        const labelMatch = !filterLabel.value || m.label.includes(filterLabel.value);
-        const typeMatch = typeDirection.value === 'all' || m.monitor_type === typeDirection.value;
-        const statusMatch = statusDirection.value === 'all' || m.status === statusDirection.value;
-        return labelMatch && typeMatch && statusMatch;
-    });
-});
-
-// Paginated monitors
-const paginatedMonitors = computed(() => {
-    const start = (currentPage.value - 1) * pageSize.value;
-    return filteredMonitors.value.slice(start, start + pageSize.value);
-});
-const totalPages = computed(() => Math.ceil(filteredMonitors.value.length / pageSize.value));
-
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Projects', href: '/projects' },
-    { title: `${project.label}`, href: `/projects/${project.id}` },
-];
-
+/**
+ * Go to monitor details page
+ * @param {number} monitorId
+ */
 function goToMonitorDetails(monitorId: number) {
     window.location.href = `/projects/${project.id}/monitors/${monitorId}`;
 }
 
+/**
+ * Cycle type filter for monitors
+ */
 function cycleTypeFilter() {
     if (typeDirection.value === 'all') {
         typeDirection.value = 'ping';
@@ -280,6 +318,9 @@ function cycleTypeFilter() {
     }
 }
 
+/**
+ * Cycle status filter for monitors
+ */
 function cycleStatusFilter() {
     if (statusDirection.value === 'all') {
         statusDirection.value = 'succeeded';
@@ -289,6 +330,13 @@ function cycleStatusFilter() {
         statusDirection.value = 'all';
     }
 }
+
+/* 12. Lifecycle */
+// Already handled above with onMounted/onUnmounted
+
+/* 13. defineExpose */
+// No expose needed for this page
+
 </script>
 
 <template>

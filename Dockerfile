@@ -22,6 +22,14 @@ COPY . .
 # Install PHP dependencies
 RUN composer install
 
+# Install Node.js and npm
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y nodejs
+
+# Install frontend dependencies and build
+RUN npm install
+RUN npm run build
+
 # Copy entrypoint script and set permissions
 COPY .docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

@@ -7,6 +7,9 @@ use App\Models\MonitorUpdate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * MonitorUpdateController handles the CRUD operations for monitor updates.
+ */
 class MonitorUpdateController extends Controller
 {
     // List all MonitorUpdates

@@ -7,6 +7,9 @@ use App\Models\Monitor;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * BadgeController handles the generation of status badges for monitors.
+ */
 class BadgeController extends Controller
 {
     /**
