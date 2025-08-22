@@ -40,7 +40,7 @@ class Monitor extends Model
     protected $fillable = [
         'project_id',
         'label',
-        'periodicity',   // TODO: The allowed range is between 5 and 300 seconds
+        'periodicity', 
         'monitor_type',
         'badge_label',
         'status',
@@ -62,6 +62,11 @@ class Monitor extends Model
             'keywords' => 'array',
             'status' => 'string',
         ];
+    }
+
+    public function setPeriodicityAttribute($value)
+    {
+        $this->attributes['periodicity'] = max(5, min(300, (int)$value));
     }
 
     public function project()
