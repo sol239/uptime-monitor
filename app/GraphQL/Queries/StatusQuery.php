@@ -24,7 +24,7 @@ class StatusQuery extends Query
         return [
             'monitorIdentifier' => [
                 'type' => Type::nonNull(Type::string()),
-                'description' => 'Monitor ID or label',
+                'description' => 'Monitor ID',
             ],
             'from' => [
                 'type' => Type::int(),
@@ -39,26 +39,29 @@ class StatusQuery extends Query
 
     public function resolve($root, $args)
     {
-        $monitor = Monitor::where('label', $args['monitorIdentifier'])->firstOrFail();
+        $monitor = Monitor::where('id', $args['monitorIdentifier'])->firstOrFail();
 
         $logsQuery = $monitor->logs();
 
         if (!empty($args['from'])) {
-            $logsQuery->where('created_at', '>=', date('Y-m-d H:i:s', $args['from']));
+            $logsQuery->where('started_at', '>=', date('Y-m-d H:i:s', $args['from']));
         }
 
         if (!empty($args['to'])) {
-            $logsQuery->where('created_at', '<=', date('Y-m-d H:i:s', $args['to']));
+            $logsQuery->where('started_at', '<=', date('Y-m-d H:i:s', $args['to']));
         }
 
         $logs = $logsQuery->get();
 
         return $logs->map(function ($log) {
-            return [
-                'date' => $log->created_at,
-                'ok' => $log->latest_status === 'succeeded',
-                'responseTime' => $log->response_time,
-            ];
-        });
+    return [
+        'date' => $log->started_at,
+        'ok' => $log->status === 'succeeded',
+        'responseTime' => $log->response_time_ms,
+    ];
+    })
+    ->sortByDesc('date')
+    ->values() 
+    ->toArray();
     }
 }

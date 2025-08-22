@@ -51,10 +51,13 @@ class MonitorType extends GraphQLType
                 'description' => 'Monitor URL',
             ],
 
-            // TODO: BADGE LABEL URL
             'badgeUrl' => [
                 'type' => Type::nonNull(Type::string()),
                 'description' => 'Monitor badge URL',
+                'resolve' => function ($root) {
+                    $appUrl = env('APP_URL', 'http://localhost:8000');
+                    return "{$appUrl}/api/v1/badge/{$root->id}";
+                }
             ],
         ];
     }

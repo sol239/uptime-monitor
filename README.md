@@ -116,10 +116,15 @@ npx cypress open   # with UI
 
 ## API
 
+> [!CAUTION]
+> API endpoints are not protected. In production Laravel Sanctum should be used to protect these endpoints.
+
 ### GraphQL
 
+You can use the GraphQL API to interact with the application's data using {APP_URL}/graphql.
+
 ```graphql
-# Example 1
+# Example 1:
 query {
   projects {
     identifier
@@ -127,22 +132,25 @@ query {
     description
     monitors {
       identifier
+      periodicity
       label
       type
       host
       url
       badgeUrl
-      periodicity
     }
   }
 }
 
-# Example 2
-status(monitorIdentifier: "monitor-123") {
+# Example 2:
+# monitorIdentifier is monitor's id
+query {
+  status(monitorIdentifier: "8") {
     date
     ok
     responseTime
   }
+}
 ```
 
 ---
@@ -151,7 +159,11 @@ status(monitorIdentifier: "monitor-123") {
 
 The application exposes a RESTful API for interacting with its resources. 
 
-> [!CAUTION]
-> API endpoints are not protected. In production Laravel Sanctum should be used to protect these endpoints.
+It uses OpenAPI/Swagger to document its RESTful API endpoints. You can find the API documentation at `http://localhost:8000/api/documentation/#/api/docs` or `{APP_URL}/api/documentation/#/api/docs`. Also you can find the auto-generated API documentation in the `storage/api-docs` directory.
 
-It uses OpenAPI/Swagger to document its RESTful API endpoints. You can find the API documentation at `http://localhost:8000/api/documentation/#/api/docs` or `{APP_URL}/api/documentation/#/api/docs`.
+
+## Additional Information
+
+You can contact me at [david.valek17@gmail.com](mailto:david.valek17@gmail.com).
+
+You can find the assignment specification at [this link](https://webik.ms.mff.cuni.cz/nswi153/seminar-project/).

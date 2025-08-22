@@ -42,6 +42,7 @@ return [
             'driver' => 'local',
             'root' => storage_path('app/public'),
             'url' => env('APP_URL').'/storage',
+            'port' => env('APP_PORT', 8000),
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
