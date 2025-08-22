@@ -1,0 +1,23 @@
+stages:
+  - code-quality
+
+lint_code:
+  stage: code-quality
+  image: node:20
+  services:
+    - name: php:8.2
+  before_script:
+    - apt-get update && apt-get install -y unzip git
+    - curl -sS https://getcomposer.org/installer | php
+    - php composer.phar install --no-interaction --no-progress
+    - npm ci
+  script:
+    - echo "Running Laravel Pint lint..."
+    - npm run lint:laravel
+    - echo "Running ESLint..."
+    - npm run lint
+    - echo "Checking Prettier formatting..."
+    - npm run format:check
+  only:
+    - main
+    - dev
