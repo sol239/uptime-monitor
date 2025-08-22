@@ -1,13 +1,5 @@
 <?php
 
-/**
- * @OA\Info(
- *     title="Monitor API",
- *     version="1.0.0",
- *     description="API documentation for Monitor Vue project"
- * )
- */
-
 namespace App\Http\Controllers\Api\V1;
 
 use Illuminate\Http\Response;
