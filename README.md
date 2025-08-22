@@ -38,6 +38,8 @@ docker compose --profile php build
 
 In `.env` file you need to set DB_HOST to `localhost` which is the name of the DB service in compose file.
 
+In `.env` file you need to set DB_HOST to `localhost` which is the name of the DB service in compose file.
+
 ```shell
 git clone https://github.com/sol239/uptime-monitor
 cd uptime-monitor
