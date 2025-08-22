@@ -22,8 +22,15 @@ COPY . .
 # Install PHP dependencies
 RUN composer install
 
+# Copy entrypoint script and set permissions
+COPY .docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 # Expose port for artisan serve
 EXPOSE 8000
+
+# Set entrypoint
+ENTRYPOINT ["/entrypoint.sh"]
 
 # Command to run Laravel backend
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]

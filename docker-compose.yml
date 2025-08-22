@@ -6,13 +6,12 @@ services:
     container_name: laravel-backend
     working_dir: /var/www
     volumes:
-      # Caches are essential for performance
       - ./app:/var/www/app:cached
       - ./routes:/var/www/routes:cached
       - ./resources:/var/www/resources:cached
       - ./public:/var/www/public:cached
-      - ./config:/var/www/config:cached 
-      - ./database:/var/www/database:cached 
+      - ./config:/var/www/config:cached
+      - ./database:/var/www/database:cached
     ports:
       - 8000:8000
     environment:
@@ -27,6 +26,11 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "php artisan migrate:status >/dev/null 2>&1 || exit 1" ]
+      interval: 10s
+      retries: 10
+      start_period: 20s
 
   mysql:
     image: mysql:8.0
@@ -35,22 +39,19 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_DATABASE: ${DB_DATABASE}
-      MYSQL_CHARACTER_SET_SERVER: utf8mb4 
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
       MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
     ports:
-      - 33061:3306 # 3306:3306 causes conflicts
+      - 33061:3306
     volumes:
       - mysql_data:/var/lib/mysql
-
-    # Health check pro MySQL
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       timeout: 20s
       retries: 10
       interval: 10s
       start_period: 40s
 
-  # For database administration
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: laravel-phpmyadmin
@@ -63,6 +64,51 @@ services:
       - 8080:80
     depends_on:
       - mysql
+
+  python-checker:
+    build:
+      context: ./services/python-checker
+      dockerfile: Dockerfile
+    container_name: python-checker
+    working_dir: /app
+    profiles:
+      - python
+    volumes:
+      - ./services/python-checker:/app:cached
+    environment:
+      DB_CONNECTION: ${DB_CONNECTION}
+      DB_HOST: mysql
+      DB_PORT: ${DB_PORT}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      - app
+      - mysql
+    command: python main.py
+
+  php-checker:
+    build:
+      context: ./services/php-checker
+      dockerfile: Dockerfile
+    container_name: php-checker
+    working_dir: /app
+    profiles:
+      - php
+    volumes:
+      - ./services/php-checker:/app:cached
+    environment:
+      DB_CONNECTION: ${DB_CONNECTION}
+      DB_HOST: mysql
+      DB_PORT: ${DB_PORT}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      - app
+      - mysql
+    command: php main.php
+
 
 volumes:
   mysql_data:

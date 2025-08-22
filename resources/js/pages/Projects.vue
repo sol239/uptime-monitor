@@ -205,7 +205,7 @@ function cycleSortDirection() {
     <Head title="Projects" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="mx-auto mt-8 max-w-4xl">
+        <div class="mx-auto mt-8 w-4xl max-w-4xl">
             <div class="flex flex-col gap-4">
                 <div class="flex items-center justify-between">
                     <h2 class="text-2xl font-bold">Projects</h2>
@@ -314,12 +314,13 @@ function cycleSortDirection() {
                             </td>
                             <td class="px-4 py-2">
                                 <div class="flex flex-col gap-1 sm:flex-row sm:gap-2">
+                                    <!--
                                     <button
                                         @click="openEditModal(project)"
                                         class="rounded bg-yellow-500 px-2 py-1 text-xs text-white transition hover:bg-yellow-600"
                                     >
                                         Edit
-                                    </button>
+                                    </button>-->
                                     <button
                                         @click="deleteProject(project.id)"
                                         class="rounded bg-red-500 px-2 py-1 text-xs text-white transition hover:bg-red-600"

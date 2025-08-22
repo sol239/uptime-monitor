@@ -64,6 +64,10 @@ class MonitorController extends Controller
     public function store(Request $request)
     {
         $monitor = Monitor::create($request->all());
+        \App\Models\MonitorUpdate::create([
+            'monitor_id' => $monitor->id,
+            'must_update' => true,
+        ]);
         Log::info('Monitor created', ['monitor' => $monitor]);
         return response()->json($monitor, 201);
     }
@@ -131,6 +135,9 @@ class MonitorController extends Controller
     public function update(Request $request, Monitor $monitor)
     {
         $monitor->update($request->all());
+        // Set must_update to true for the corresponding MonitorUpdate
+        \App\Models\MonitorUpdate::where('monitor_id', $monitor->id)
+            ->update(['must_update' => true]);
         Log::info('Monitor updated', ['monitor' => $monitor]);
         return $monitor;
     }

@@ -7,7 +7,7 @@ import { createApp, h } from 'vue';
 import { ZiggyVue } from 'ziggy-js';
 import { initializeTheme } from './composables/useAppearance';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Monitor Vue';
+const appName = import.meta.env.VITE_APP_NAME || 'Uptime Monitor';
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),

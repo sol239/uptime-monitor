@@ -295,7 +295,7 @@ function cycleStatusFilter() {
 <template>
     <Head title="Project Details" />
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="mx-auto mt-8 max-w-4xl">
+        <div class="mx-auto mt-8 w-4xl max-w-4xl">
             <div class="flex flex-col gap-4">
                 <h1 class="mb-6 text-center text-3xl font-extrabold tracking-tight drop-shadow-md">Project Details</h1>
                 <!-- Animated success message -->
@@ -758,12 +758,14 @@ function cycleStatusFilter() {
                                 </td>
                                 <td class="px-4 py-2">
                                     <div class="flex flex-col gap-1 sm:flex-row sm:gap-2">
+                                        <!--
                                         <button
                                             @click="openEditForm(monitor)"
                                             class="rounded bg-yellow-500 px-2 py-1 text-xs text-white transition hover:bg-yellow-600"
                                         >
                                             Edit
                                         </button>
+                                        -->
                                         <button
                                             @click="deleteMonitor(monitor.id)"
                                             class="rounded bg-red-500 px-2 py-1 text-xs text-white transition hover:bg-red-600"
@@ -782,9 +784,6 @@ function cycleStatusFilter() {
                             <!-- Add empty rows to maintain fixed height -->
                             <tr v-for="n in Math.max(0, pageSize - paginatedMonitors.length)" :key="'empty-' + n" class="h-14">
                                 <td class="px-4 py-2" colspan="4">&nbsp;</td>
-                            </tr>
-                            <tr v-if="paginatedMonitors.length === 0">
-                                <td colspan="4" class="px-4 py-6 text-center text-gray-500">No monitors found.</td>
                             </tr>
                         </tbody>
                     </table>

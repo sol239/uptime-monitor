@@ -32,11 +32,31 @@ import os
 
 load_dotenv()
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+class ColorFormatter(logging.Formatter):
+    COLORS = {
+        logging.DEBUG: "\033[94m",   # Blue
+        logging.INFO: "\033[92m",    # Green
+        logging.WARNING: "\033[93m", # Yellow
+        logging.ERROR: "\033[91m",   # Red
+        logging.CRITICAL: "\033[95m" # Magenta
+    }
+    RESET = "\033[0m"
+
+    
+    def format(self, record):
+        color = self.COLORS.get(record.levelno, self.RESET)
+        # Add time to log output (HH:MM:SS)
+        log_time = self.formatTime(record, "%Y-%m-%d %H:%M:%S")        
+        message = super().format(record)
+        return f"{color}[{log_time}] {message}{self.RESET}"
+
+# Setup logger
 logger = logging.getLogger(__name__)
+handler = logging.StreamHandler()
+formatter = ColorFormatter("%(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(logging.DEBUG)
 
 
 @dataclass
@@ -281,11 +301,13 @@ class MonitorChecker:
             await writer.wait_closed()
 
             response_time = round((time.time() - start_time) * 1000)
+            logger.info(f"Ping monitor {monitor.id} - {monitor.hostname}:{monitor.port} - Connection success -> status:succeeded")
             return MonitorResult(
                 success=True, status="succeeded", response_time=response_time
             )
         except asyncio.TimeoutError:
             response_time = round((time.time() - start_time) * 1000)
+            logger.warning(f"Ping monitor {monitor.id} - {monitor.hostname}:{monitor.port} - Connection timeout -> status:failed")
             return MonitorResult(
                 success=False,
                 status="failed",
@@ -294,6 +316,7 @@ class MonitorChecker:
             )
         except Exception as e:
             response_time = round((time.time() - start_time) * 1000)
+            logger.warning(f"Ping monitor {monitor.id} - {monitor.hostname}:{monitor.port} - Connection error -> status:failed")
             return MonitorResult(
                 success=False,
                 status="failed",
@@ -340,6 +363,7 @@ class MonitorChecker:
                         error_message = (
                             f'Missing keywords: {", ".join(missing_keywords)}'
                         )
+                logger.info(f"Website monitor {monitor.id} - {monitor.url} - Connection success -> status:succeeded")
 
                 return MonitorResult(
                     success=success,
@@ -352,6 +376,7 @@ class MonitorChecker:
 
         except asyncio.TimeoutError:
             response_time = round((time.time() - start_time) * 1000)
+            logger.warning(f"Website monitor {monitor.id} - {monitor.url} - Connection timeout -> status:failed")
             return MonitorResult(
                 success=False,
                 status="failed",
@@ -359,6 +384,7 @@ class MonitorChecker:
                 error="Request timeout",
             )
         except Exception as e:
+            logger.warning(f"Website monitor {monitor.id} - {monitor.url} - Connection error -> status:failed")
             response_time = round((time.time() - start_time) * 1000)
             return MonitorResult(
                 success=False,
@@ -553,6 +579,92 @@ class MonitorChecker:
         elapsed = time.time() - start_time
         logger.info(f"=== Initialization completed in {elapsed:.2f}s ===")
 
+    async def _check_monitor_updates(self):
+        """Check monitor_updates table for must_update=1, run check, and reset must_update."""
+        def _get_updates_sync():
+            if not self.db_pool:
+                self._connect_to_database()
+            conn = self.db_pool.get_connection()
+            try:
+                cursor = conn.cursor(dictionary=True)
+                cursor.execute("SELECT monitor_id FROM monitor_updates WHERE must_update = 1")
+                rows = cursor.fetchall()
+                return [row["monitor_id"] for row in rows]
+            finally:
+                cursor.close()
+                conn.close()
+
+        monitor_ids = await asyncio.get_event_loop().run_in_executor(self.executor, _get_updates_sync)
+        if not monitor_ids:
+            return
+
+
+
+        # Fetch monitors by id
+        def _get_monitor_sync(monitor_id):
+            if not self.db_pool:
+                self._connect_to_database()
+            conn = self.db_pool.get_connection()
+            try:
+                cursor = conn.cursor(dictionary=True)
+                cursor.execute("SELECT * FROM monitors WHERE id = %s", (monitor_id,))
+                row = cursor.fetchone()
+                return row
+            finally:
+                cursor.close()
+                conn.close()
+
+        monitors = []
+        for monitor_id in monitor_ids:
+            row = await asyncio.get_event_loop().run_in_executor(self.executor, _get_monitor_sync, monitor_id)
+            if row:
+                keywords = None
+                if row.get("keywords"):
+                    try:
+                        keywords = json.loads(row["keywords"])
+                        if not isinstance(keywords, list):
+                            keywords = None
+                    except Exception:
+                        keywords = None
+                monitor = Monitor(
+                    id=row["id"],
+                    label=row["label"],
+                    monitor_type=row["monitor_type"],
+                    periodicity=row.get("periodicity", 300),
+                    hostname=row.get("hostname"),
+                    port=row.get("port"),
+                    url=row.get("url"),
+                    check_status=bool(row.get("check_status", False)),
+                    keywords=keywords,
+                )
+                monitors.append(monitor)
+
+        # Run checks for each monitor and reset must_update
+        for monitor in monitors:
+            if monitor.monitor_type == "ping":
+                logger.info("Running ping update check.")
+                result = await self._run_single_ping_check(monitor)
+            elif monitor.monitor_type == "website":
+                logger.info("Running website update check.")
+
+                result = await self._run_single_website_check(monitor)
+            else:
+                continue
+            await self._save_result_async(monitor, result)
+
+            # Reset must_update to 0
+            def _reset_update_sync(monitor_id):
+                if not self.db_pool:
+                    self._connect_to_database()
+                conn = self.db_pool.get_connection()
+                try:
+                    cursor = conn.cursor()
+                    cursor.execute("UPDATE monitor_updates SET must_update = 0 WHERE monitor_id = %s", (monitor_id,))
+                finally:
+                    cursor.close()
+                    conn.close()
+            await asyncio.get_event_loop().run_in_executor(self.executor, _reset_update_sync, monitor.id)
+
     async def run_monitoring_loop(self):
         """Enhanced monitoring loop with better performance tracking"""
         logger.info("Starting monitoring loop...")
@@ -611,10 +723,13 @@ class MonitorChecker:
                         # Update statistics
                         self._update_stats(results)
 
-                        logger.debug(f"Processed {len(results)} {batch_type} monitors")
+                        # logger.debug(f"Processed {len(results)} {batch_type} monitors")
 
                     except Exception as e:
                         logger.error(f"Error processing {batch_type} monitors: {e}")
+
+            # Periodically check monitor_updates table (every 5 seconds)
+            await self._check_monitor_updates()
 
             # Memory management - log stats periodically
             if time.time() % 60 < 1:  # Every minute
@@ -705,6 +820,11 @@ async def main():
 
 if __name__ == "__main__":
     # Set up asyncio event loop with optimizations
+    if hasattr(asyncio, "WindowsSelectorEventLoopPolicy"):
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+    # Run the main function
+    asyncio.run(main())
     if hasattr(asyncio, "WindowsSelectorEventLoopPolicy"):
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
