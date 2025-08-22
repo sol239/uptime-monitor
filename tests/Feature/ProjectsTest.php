@@ -19,4 +19,3 @@ test('not authenticated users can not visit the projects', function () {
     $response = $this->get('/projects');
     $response->assertRedirect('/login');
 });
-

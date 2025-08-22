@@ -11,6 +11,7 @@ describe('API Test - GET /projects without auth', () => {
         expect(response.body).to.be.an('array');
 
         response.body.forEach(project => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-expressions
           expect(project.label).to.be.a('string').and.not.empty;
         });
 

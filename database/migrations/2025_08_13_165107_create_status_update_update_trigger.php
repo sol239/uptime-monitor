@@ -1,8 +1,6 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
@@ -13,7 +11,7 @@ return new class extends Migration
     public function up(): void
     {
         // Create the trigger
-        DB::unprepared("
+        DB::unprepared('
             CREATE TRIGGER update_monitor_status
             AFTER INSERT ON monitor_logs
             FOR EACH ROW
@@ -22,7 +20,7 @@ return new class extends Migration
                 SET status = NEW.status
                 WHERE id = NEW.monitor_id;
             END
-        ");
+        ');
     }
 
     /**

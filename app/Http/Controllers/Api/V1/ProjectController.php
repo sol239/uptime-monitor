@@ -30,6 +30,7 @@ class ProjectController extends Controller
         try {
             $result = Project::all();
             Log::info('ProjectController@index success', ['count' => count($result)]);
+
             return $result;
         } catch (\Exception $e) {
             Log::error('ProjectController@index error', ['error' => $e->getMessage()]);
@@ -77,6 +78,7 @@ class ProjectController extends Controller
             Log::info('ProjectController@store validated', $validated);
             $project = Project::create($validated);
             Log::info('ProjectController@store created', ['id' => $project->id]);
+
             return response()->json($project, 201);
         } catch (\Exception $e) {
             Log::error('ProjectController@store error', ['error' => $e->getMessage()]);
@@ -113,6 +115,7 @@ class ProjectController extends Controller
         try {
             $project = Project::findOrFail($id);
             Log::info('ProjectController@show success', ['id' => $id]);
+
             return $project;
         } catch (\Exception $e) {
             Log::error('ProjectController@show error', ['id' => $id, 'error' => $e->getMessage()]);
@@ -198,6 +201,7 @@ class ProjectController extends Controller
             Log::info('ProjectController@update validated', $validated);
             $project->update($validated);
             Log::info('ProjectController@update success', ['id' => $project->id]);
+
             return response()->json($project);
         } catch (\Exception $e) {
             Log::error('ProjectController@update error', ['id' => $id, 'error' => $e->getMessage()]);
@@ -232,6 +236,7 @@ class ProjectController extends Controller
         try {
             Project::destroy($id);
             Log::info('ProjectController@destroy success', ['id' => $id]);
+
             return response()->json(null, 204);
         } catch (\Exception $e) {
             Log::error('ProjectController@destroy error', ['id' => $id, 'error' => $e->getMessage()]);

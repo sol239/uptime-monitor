@@ -1,11 +1,14 @@
 <?php
+
 // Load .env variables manually if not loaded
-$envPath = __DIR__ . '/../../.env';
+$envPath = __DIR__.'/../../.env';
 if (file_exists($envPath)) {
     $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     foreach ($lines as $line) {
-        if (strpos(trim($line), '#') === 0 || strpos($line, '=') === false) continue;
-        list($name, $value) = explode('=', $line, 2);
+        if (strpos(trim($line), '#') === 0 || strpos($line, '=') === false) {
+            continue;
+        }
+        [$name, $value] = explode('=', $line, 2);
         $name = trim($name);
         $value = trim($value, " \t\n\r\0\x0B\"'");
         putenv("$name=$value");
@@ -14,32 +17,25 @@ if (file_exists($envPath)) {
 
 date_default_timezone_set('Europe/Prague');
 
-
 class MonitorChecker
 {
-
     /**
      * A list of ping monitors to check.
-     * @var array
      */
     private array $pingMonitors;
 
     /**
      * A list of website monitors to check.
-     * @var array
      */
     private array $websiteMonitors;
 
-
     /**
      * The path to the SQLite database file.
-     * @var string
      */
-    public static string $DB_PATH = __DIR__ . '/../../database/database.sqlite';
+    public static string $DB_PATH = __DIR__.'/../../database/database.sqlite';
 
     /**
      * The PDO instance for database connections.
-     * @var PDO
      */
     private PDO $pdo;
 
@@ -69,31 +65,33 @@ class MonitorChecker
             $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             echo "Connected successfully.\n";
         } catch (PDOException $e) {
-            die("Could not connect to database: " . $e->getMessage() . "\n");
+            exit('Could not connect to database: '.$e->getMessage()."\n");
         }
     }
 
     private function loadMonitors(string $type)
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM monitors WHERE monitor_type = :monitor_type");
+        $stmt = $this->pdo->prepare('SELECT * FROM monitors WHERE monitor_type = :monitor_type');
         $stmt->execute(['monitor_type' => $type]);
+
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     private function hasLog($monitor): bool
     {
-        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM monitor_logs WHERE monitor_id = :monitor_id");
+        $stmt = $this->pdo->prepare('SELECT COUNT(*) FROM monitor_logs WHERE monitor_id = :monitor_id');
         $stmt->execute(['monitor_id' => $monitor['id']]);
+
         return $stmt->fetchColumn() > 0;
     }
 
     public function printInformation(): void
     {
-        echo "Ping Monitors [" . count($this->pingMonitors) . "]:\n";
+        echo 'Ping Monitors ['.count($this->pingMonitors)."]:\n";
         foreach ($this->pingMonitors as $monitor) {
             echo "Monitor ID: {$monitor['id']}, Label: {$monitor['label']}, Hostname: {$monitor['hostname']}, Port: {$monitor['port']}\n";
         }
-        echo "Website Monitors [" . count($this->websiteMonitors) . "]:\n";
+        echo 'Website Monitors ['.count($this->websiteMonitors)."]:\n";
         foreach ($this->websiteMonitors as $monitor) {
             echo "Monitor ID: {$monitor['id']}, Label: {$monitor['label']}, URL: {$monitor['url']}\n";
         }
@@ -111,24 +109,24 @@ class MonitorChecker
         if ($connection) {
             fclose($connection);
             $status = 'succeeded';
-            //echo "Connection successful! Response time: {$responseTime} ms\n";
+            // echo "Connection successful! Response time: {$responseTime} ms\n";
         } else {
             $status = 'failed';
-            //echo "Connection failed: {$errstr} ({$errno})\n";
+            // echo "Connection failed: {$errstr} ({$errno})\n";
         }
 
         // INSERTING RESULT INTO DB
-        $stmt = $this->pdo->prepare("
+        $stmt = $this->pdo->prepare('
             INSERT INTO monitor_logs (monitor_id, started_at, status, response_time_ms, created_at, updated_at)
             VALUES (:monitor_id, :started_at, :status, :response_time_ms, :created_at, :updated_at)
-        ");
+        ');
         $stmt->execute([
-            'monitor_id'       => $pingMonitor['id'],
-            'started_at'       => date('Y-m-d H:i:s', $start),
-            'status'           => $status,
+            'monitor_id' => $pingMonitor['id'],
+            'started_at' => date('Y-m-d H:i:s', $start),
+            'status' => $status,
             'response_time_ms' => $responseTime,
-            'created_at'       => date('Y-m-d H:i:s'),
-            'updated_at'       => date('Y-m-d H:i:s'),
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s'),
         ]);
 
         echo "Log saved for monitor ID {$pingMonitor['id']}.\n";
@@ -137,9 +135,9 @@ class MonitorChecker
     public function runWebsiteMonitorCheck($websiteMonitor): void
     {
         $url = $websiteMonitor['url'];
-        $checkStatus = !empty($websiteMonitor['check_status']) && $websiteMonitor['check_status'];
+        $checkStatus = ! empty($websiteMonitor['check_status']) && $websiteMonitor['check_status'];
         $keywords = [];
-        if (!empty($websiteMonitor['keywords'])) {
+        if (! empty($websiteMonitor['keywords'])) {
             // Assume keywords stored as comma-separated string
             $keywords = json_decode($websiteMonitor['keywords'], true);
         }
@@ -178,30 +176,30 @@ class MonitorChecker
                 foreach ($keywords as $keyword) {
                     echo "Keyword check for: {$keyword}\n";
                     echo strpos($response, $keyword);
-                    if (!empty($keyword) && strpos($response, $keyword) === false) {
+                    if (! empty($keyword) && strpos($response, $keyword) === false) {
                         $missingKeywords[] = $keyword;
                     }
                 }
                 if ($missingKeywords) {
                     $status = 'failed';
-                    echo "Missing keywords: " . implode(', ', $missingKeywords) . "\n";
+                    echo 'Missing keywords: '.implode(', ', $missingKeywords)."\n";
                 }
             }
         }
         curl_close($ch);
 
         // INSERTING RESULT INTO DB
-        $stmt = $this->pdo->prepare("
+        $stmt = $this->pdo->prepare('
             INSERT INTO monitor_logs (monitor_id, started_at, status, response_time_ms, created_at, updated_at)
             VALUES (:monitor_id, :started_at, :status, :response_time_ms, :created_at, :updated_at)
-        ");
+        ');
         $stmt->execute([
-            'monitor_id'       => $websiteMonitor['id'],
-            'started_at'       => date('Y-m-d H:i:s', $start),
-            'status'           => $status,
+            'monitor_id' => $websiteMonitor['id'],
+            'started_at' => date('Y-m-d H:i:s', $start),
+            'status' => $status,
             'response_time_ms' => $responseTime,
-            'created_at'       => date('Y-m-d H:i:s'),
-            'updated_at'       => date('Y-m-d H:i:s'),
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s'),
         ]);
 
         echo "Log saved for website monitor ID {$websiteMonitor['id']}.\n";
@@ -211,12 +209,12 @@ class MonitorChecker
     {
         $currentTime = date('Y-m-d H:i:s');
         echo "=== Initialization started at: {$currentTime} ===\n";
-        
+
         foreach ($this->pingMonitors as $pingMonitor) {
             $_hasLog = $this->hasLog($pingMonitor);
-            echo "Monitor [" . $pingMonitor['label'] . "] has log: " . ($_hasLog ? "Yes" : "No") . "\n";
-            
-            if (!$_hasLog) {
+            echo 'Monitor ['.$pingMonitor['label'].'] has log: '.($_hasLog ? 'Yes' : 'No')."\n";
+
+            if (! $_hasLog) {
                 $this->runPingMonitorCheck($pingMonitor);
             }
 
@@ -225,15 +223,15 @@ class MonitorChecker
                 'monitor' => $pingMonitor,
                 'nextCheckTime' => $nextCheckTime,
             ];
-            
+
             echo "Monitor [{$pingMonitor['label']}] next check scheduled at: {$nextCheckTime}\n";
         }
 
         foreach ($this->websiteMonitors as $websiteMonitor) {
             $_hasLog = $this->hasLog($websiteMonitor);
-            echo "Website Monitor [" . $websiteMonitor['label'] . "] has log: " . ($_hasLog ? "Yes" : "No") . "\n";
-            
-            if (!$_hasLog) {
+            echo 'Website Monitor ['.$websiteMonitor['label'].'] has log: '.($_hasLog ? 'Yes' : 'No')."\n";
+
+            if (! $_hasLog) {
                 $this->runWebsiteMonitorCheck($websiteMonitor);
             }
 
@@ -242,11 +240,11 @@ class MonitorChecker
                 'monitor' => $websiteMonitor,
                 'nextCheckTime' => $nextCheckTime,
             ];
-            
+
             echo "Website Monitor [{$websiteMonitor['label']}] next check scheduled at: {$nextCheckTime}\n";
         }
-        
-        echo "=== Initialization completed at: " . date('Y-m-d H:i:s') . " ===\n";
+
+        echo '=== Initialization completed at: '.date('Y-m-d H:i:s')." ===\n";
     }
 
     /**
@@ -255,13 +253,14 @@ class MonitorChecker
      */
     private function calculateNextCheckTime($monitor): string
     {
-        $stmt = $this->pdo->prepare("SELECT started_at FROM monitor_logs WHERE monitor_id = :monitor_id ORDER BY started_at DESC LIMIT 1");
+        $stmt = $this->pdo->prepare('SELECT started_at FROM monitor_logs WHERE monitor_id = :monitor_id ORDER BY started_at DESC LIMIT 1');
         $stmt->execute(['monitor_id' => $monitor['id']]);
         $latestStartedAt = $stmt->fetchColumn();
-        $periodicity = isset($monitor['periodicity']) ? (int)$monitor['periodicity'] : 300; // default 5 minutes (300 seconds)
+        $periodicity = isset($monitor['periodicity']) ? (int) $monitor['periodicity'] : 300; // default 5 minutes (300 seconds)
 
         if ($latestStartedAt) {
             $nextCheckTimestamp = strtotime($latestStartedAt) + $periodicity; // periodicity in seconds
+
             return date('Y-m-d H:i:s', $nextCheckTimestamp);
         } else {
             // If no log, schedule immediately
@@ -271,17 +270,17 @@ class MonitorChecker
 
     private function checkMonitorUpdates(): void
     {
-        $stmt = $this->pdo->prepare("SELECT monitor_id FROM monitor_updates WHERE must_update = 1");
+        $stmt = $this->pdo->prepare('SELECT monitor_id FROM monitor_updates WHERE must_update = 1');
         $stmt->execute();
         $monitorIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
         foreach ($monitorIds as $monitorId) {
             // Reload monitor from DB
-            $stmtMonitor = $this->pdo->prepare("SELECT * FROM monitors WHERE id = :id");
+            $stmtMonitor = $this->pdo->prepare('SELECT * FROM monitors WHERE id = :id');
             $stmtMonitor->execute(['id' => $monitorId]);
             $monitor = $stmtMonitor->fetch(PDO::FETCH_ASSOC);
 
-            if (!$monitor) {
+            if (! $monitor) {
                 continue;
             }
 
@@ -312,7 +311,7 @@ class MonitorChecker
             }
 
             // Set must_update to 0
-            $stmtUpdate = $this->pdo->prepare("UPDATE monitor_updates SET must_update = 0 WHERE monitor_id = :monitor_id");
+            $stmtUpdate = $this->pdo->prepare('UPDATE monitor_updates SET must_update = 0 WHERE monitor_id = :monitor_id');
             $stmtUpdate->execute(['monitor_id' => $monitorId]);
 
             // Run check immediately
@@ -333,7 +332,7 @@ class MonitorChecker
     }
 
     public function runChecks(): void
-    {   
+    {
         echo "=== Running main loop ===\n";
 
         // TODO: THIS METHOD WILL RUN IN LOOP
@@ -345,33 +344,30 @@ class MonitorChecker
 
             foreach ($this->monitorNextChecks as $index => $monitorCheck) {
                 $nextCheckTimestamp = strtotime($monitorCheck['nextCheckTime']);
-               $x = $currentTime >= $nextCheckTimestamp;
+                $x = $currentTime >= $nextCheckTimestamp;
                 // echo "Current: " . date('Y-m-d H:i:s', $currentTime) . " - Next Check: " . $monitorCheck['nextCheckTime'] . " - " . ($x ? 'true' : 'false') . "\n";
                 if ($currentTime >= $nextCheckTimestamp) {
                     $monitor = $monitorCheck['monitor'];
-                    echo "Running check for monitor ID {$monitor['id']} at " . date('Y-m-d H:i:s') . "\n";
-                    
+                    echo "Running check for monitor ID {$monitor['id']} at ".date('Y-m-d H:i:s')."\n";
+
                     if ($monitor['monitor_type'] === 'ping') {
                         $this->runPingMonitorCheck($monitor);
                     } elseif ($monitor['monitor_type'] === 'website') {
                         $this->runWebsiteMonitorCheck($monitor);
                     }
-                    
+
                     // Update next check time for this specific monitor
                     $this->monitorNextChecks[$index]['nextCheckTime'] = $this->calculateNextCheckTime($monitor);
-                    echo "Next check for monitor ID {$monitor['id']} scheduled at: " . $this->monitorNextChecks[$index]['nextCheckTime'] . "\n";
+                    echo "Next check for monitor ID {$monitor['id']} scheduled at: ".$this->monitorNextChecks[$index]['nextCheckTime']."\n";
                 }
             }
             sleep(5); // Wait 5 seconds before next loop
         }
 
-
-
     }
 }
 
-
-$checker = new MonitorChecker();
+$checker = new MonitorChecker;
 $checker->initializeMonitorChecks();
 
 $checker->runChecks();

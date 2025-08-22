@@ -1,12 +1,7 @@
 <script setup lang="ts">
-import InputError from '@/components/InputError.vue';
 import TextLink from '@/components/TextLink.vue';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
-import { LoaderCircle } from 'lucide-vue-next';
 
 defineProps<{
     status?: string;
@@ -16,6 +11,7 @@ const form = useForm({
     email: '',
 });
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const submit = () => {
     form.post(route('password.email'));
 };
@@ -57,7 +53,6 @@ const submit = () => {
     <!-- Some email provider would have to be configured to send the reset link and also the app would have
      to be deployed somewhere. -->
     <AuthLayout title="Forgot password" description="Please contact admin to reset your password">
-
         <Head title="Forgot password" />
 
         <div class="space-x-1 text-center text-sm text-muted-foreground">

@@ -2,10 +2,10 @@
 
 namespace App\GraphQL\Queries;
 
-use GraphQL\Type\Definition\Type;
-use Rebing\GraphQL\Support\Query;
-use Rebing\GraphQL\Support\Facades\GraphQL;
 use App\Models\Monitor;
+use GraphQL\Type\Definition\Type;
+use Rebing\GraphQL\Support\Facades\GraphQL;
+use Rebing\GraphQL\Support\Query;
 
 class StatusQuery extends Query
 {
@@ -43,25 +43,25 @@ class StatusQuery extends Query
 
         $logsQuery = $monitor->logs();
 
-        if (!empty($args['from'])) {
+        if (! empty($args['from'])) {
             $logsQuery->where('started_at', '>=', date('Y-m-d H:i:s', $args['from']));
         }
 
-        if (!empty($args['to'])) {
+        if (! empty($args['to'])) {
             $logsQuery->where('started_at', '<=', date('Y-m-d H:i:s', $args['to']));
         }
 
         $logs = $logsQuery->get();
 
         return $logs->map(function ($log) {
-    return [
-        'date' => $log->started_at,
-        'ok' => $log->status === 'succeeded',
-        'responseTime' => $log->response_time_ms,
-    ];
-    })
-    ->sortByDesc('date')
-    ->values() 
-    ->toArray();
+            return [
+                'date' => $log->started_at,
+                'ok' => $log->status === 'succeeded',
+                'responseTime' => $log->response_time_ms,
+            ];
+        })
+            ->sortByDesc('date')
+            ->values()
+            ->toArray();
     }
 }

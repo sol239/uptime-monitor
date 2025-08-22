@@ -106,10 +106,13 @@ const paginatedProjects = computed(() => {
 });
 const totalPages = computed(() => Math.ceil(filteredProjects.value.length / ITEMS_PER_PAGE.value));
 
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function sortByLabel(direction: 'asc' | 'desc') {
     sortDirection.value = direction;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function openEditModal(project: any) {
     editingProject.value = project;
     editForm.value = {

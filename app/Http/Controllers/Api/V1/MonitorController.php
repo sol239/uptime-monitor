@@ -30,6 +30,7 @@ class MonitorController extends Controller
     public function index()
     {
         Log::info('Fetching all monitors');
+
         return Monitor::all();
     }
 
@@ -61,6 +62,7 @@ class MonitorController extends Controller
             'must_update' => true,
         ]);
         Log::info('Monitor created', ['monitor' => $monitor]);
+
         return response()->json($monitor, 201);
     }
 
@@ -88,11 +90,12 @@ class MonitorController extends Controller
      */
     public function show(Monitor $monitor)
     {
-        if (!$monitor) {
+        if (! $monitor) {
             Log::error('Monitor not found', ['monitor' => $monitor]);
         } else {
             Log::info('Monitor detail fetched', ['monitor' => $monitor]);
         }
+
         return $monitor;
     }
 
@@ -131,6 +134,7 @@ class MonitorController extends Controller
         \App\Models\MonitorUpdate::where('monitor_id', $monitor->id)
             ->update(['must_update' => true]);
         Log::info('Monitor updated', ['monitor' => $monitor]);
+
         return $monitor;
     }
 
@@ -158,6 +162,7 @@ class MonitorController extends Controller
     {
         $monitor->delete();
         Log::info('Monitor deleted', ['monitor' => $monitor->id]);
+
         return response()->json(null, 204);
     }
 

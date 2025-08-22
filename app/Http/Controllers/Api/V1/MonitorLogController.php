@@ -82,9 +82,9 @@ class MonitorLogController extends Controller
      */
     public function index($monitorId, Request $request)
     {
-        Log::info("Fetching monitor logs", [
+        Log::info('Fetching monitor logs', [
             'monitor_id' => $monitorId,
-            'params' => $request->all()
+            'params' => $request->all(),
         ]);
 
         try {
@@ -120,11 +120,11 @@ class MonitorLogController extends Controller
                 $total = $query->count();
                 $logs = $query->skip(($page - 1) * $perPage)->take($perPage)->get();
 
-                Log::info("Paginated monitor logs fetched", [
+                Log::info('Paginated monitor logs fetched', [
                     'monitor_id' => $monitorId,
                     'page' => $page,
                     'per_page' => $perPage,
-                    'total' => $total
+                    'total' => $total,
                 ]);
 
                 return response()->json([
@@ -135,19 +135,20 @@ class MonitorLogController extends Controller
                 ]);
             }
 
-            Log::info("Monitor logs fetched", [
+            Log::info('Monitor logs fetched', [
                 'monitor_id' => $monitorId,
-                'count' => $query->count()
+                'count' => $query->count(),
             ]);
 
             return response()->json([
                 'logs' => $query->get(),
             ]);
         } catch (\Exception $e) {
-            Log::error("Error fetching monitor logs", [
+            Log::error('Error fetching monitor logs', [
                 'monitor_id' => $monitorId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return response()->json(['error' => 'Failed to fetch logs'], 500);
         }
     }
@@ -182,9 +183,9 @@ class MonitorLogController extends Controller
      */
     public function store(Request $request, $monitorId)
     {
-        Log::info("Creating monitor log", [
+        Log::info('Creating monitor log', [
             'monitor_id' => $monitorId,
-            'data' => $request->all()
+            'data' => $request->all(),
         ]);
 
         try {
@@ -193,16 +194,17 @@ class MonitorLogController extends Controller
 
             $monitorLog = MonitorLog::create($data);
 
-            Log::info("Monitor log created", [
-                'monitor_log_id' => $monitorLog->id
+            Log::info('Monitor log created', [
+                'monitor_log_id' => $monitorLog->id,
             ]);
 
             return response()->json($monitorLog, 201);
         } catch (\Exception $e) {
-            Log::error("Error creating monitor log", [
+            Log::error('Error creating monitor log', [
                 'monitor_id' => $monitorId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return response()->json(['error' => 'Failed to create log'], 500);
         }
     }
@@ -231,9 +233,10 @@ class MonitorLogController extends Controller
      */
     public function show(MonitorLog $monitorLog)
     {
-        Log::info("Fetching monitor log detail", [
-            'monitor_log_id' => $monitorLog->id
+        Log::info('Fetching monitor log detail', [
+            'monitor_log_id' => $monitorLog->id,
         ]);
+
         return $monitorLog;
     }
 
@@ -267,24 +270,25 @@ class MonitorLogController extends Controller
      */
     public function update(Request $request, MonitorLog $monitorLog)
     {
-        Log::info("Updating monitor log", [
+        Log::info('Updating monitor log', [
             'monitor_log_id' => $monitorLog->id,
-            'data' => $request->all()
+            'data' => $request->all(),
         ]);
 
         try {
             $monitorLog->update($request->all());
 
-            Log::info("Monitor log updated", [
-                'monitor_log_id' => $monitorLog->id
+            Log::info('Monitor log updated', [
+                'monitor_log_id' => $monitorLog->id,
             ]);
 
             return $monitorLog;
         } catch (\Exception $e) {
-            Log::error("Error updating monitor log", [
+            Log::error('Error updating monitor log', [
                 'monitor_log_id' => $monitorLog->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return response()->json(['error' => 'Failed to update log'], 500);
         }
     }
@@ -311,23 +315,24 @@ class MonitorLogController extends Controller
      */
     public function destroy(MonitorLog $monitorLog)
     {
-        Log::info("Deleting monitor log", [
-            'monitor_log_id' => $monitorLog->id
+        Log::info('Deleting monitor log', [
+            'monitor_log_id' => $monitorLog->id,
         ]);
 
         try {
             $monitorLog->delete();
 
-            Log::info("Monitor log deleted", [
-                'monitor_log_id' => $monitorLog->id
+            Log::info('Monitor log deleted', [
+                'monitor_log_id' => $monitorLog->id,
             ]);
 
             return response()->json(null, 204);
         } catch (\Exception $e) {
-            Log::error("Error deleting monitor log", [
+            Log::error('Error deleting monitor log', [
                 'monitor_log_id' => $monitorLog->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return response()->json(['error' => 'Failed to delete log'], 500);
         }
     }

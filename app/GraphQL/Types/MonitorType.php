@@ -2,9 +2,9 @@
 
 namespace App\GraphQL\Types;
 
+use App\Models\Monitor;
 use GraphQL\Type\Definition\Type;
 use Rebing\GraphQL\Support\Type as GraphQLType;
-use App\Models\Monitor;
 
 class MonitorType extends GraphQLType
 {
@@ -22,7 +22,7 @@ class MonitorType extends GraphQLType
                 'description' => 'Monitor identifier',
                 'resolve' => function ($root) {
                     return $root->id;
-                }
+                },
             ],
             'periodicity' => [
                 'type' => Type::int(),
@@ -37,14 +37,14 @@ class MonitorType extends GraphQLType
                 'description' => 'Monitor type',
                 'resolve' => function ($root) {
                     return $root->monitor_type;
-                }
+                },
             ],
             'host' => [
                 'type' => Type::string(),
                 'description' => 'Monitor host',
                 'resolve' => function ($root) {
                     return $root->hostname;
-                }
+                },
             ],
             'url' => [
                 'type' => Type::string(),
@@ -56,8 +56,9 @@ class MonitorType extends GraphQLType
                 'description' => 'Monitor badge URL',
                 'resolve' => function ($root) {
                     $appUrl = env('APP_URL', 'http://localhost:8000');
+
                     return "{$appUrl}/api/v1/badge/{$root->id}";
-                }
+                },
             ],
         ];
     }

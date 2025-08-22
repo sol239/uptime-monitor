@@ -2,10 +2,10 @@
 
 namespace App\GraphQL\Types;
 
-use GraphQL\Type\Definition\Type;
-use Rebing\GraphQL\Support\Type as GraphQLType;
-use Rebing\GraphQL\Support\Facades\GraphQL;
 use App\Models\Project;
+use GraphQL\Type\Definition\Type;
+use Rebing\GraphQL\Support\Facades\GraphQL;
+use Rebing\GraphQL\Support\Type as GraphQLType;
 
 class ProjectType extends GraphQLType
 {
@@ -23,7 +23,7 @@ class ProjectType extends GraphQLType
                 'description' => 'Project identifier',
                 'resolve' => function ($root) {
                     return $root->id;
-                }
+                },
             ],
             'label' => [
                 'type' => Type::nonNull(Type::string()),
@@ -38,7 +38,7 @@ class ProjectType extends GraphQLType
                 'description' => 'Project monitors',
                 'resolve' => function ($root) {
                     return $root->monitors;
-                }
+                },
             ],
         ];
     }

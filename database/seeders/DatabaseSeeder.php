@@ -34,8 +34,6 @@ class DatabaseSeeder extends Seeder
                 'user_id' => 1,
             ]);
 
-
-
             $project2 = Project::factory()->create([
                 'label' => 'API Gateway',
                 'description' => 'REST API services monitoring.',
@@ -71,7 +69,7 @@ class DatabaseSeeder extends Seeder
                 'tags' => ['production', 'ecommerce', 'critical'],
                 'user_id' => 2,
             ]);
-        }   
+        }
 
         // PERFORMANCE TESTING
         for ($i = 1; $i <= 400; $i++) {
@@ -130,7 +128,7 @@ class DatabaseSeeder extends Seeder
             ]);
         }
         */
-            //-----------------------------------------------------------------
+            // -----------------------------------------------------------------
 
             Monitor::factory()->create([
                 'project_id' => $project1->id,
@@ -224,7 +222,7 @@ class DatabaseSeeder extends Seeder
                 'badge_label' => 'ZLibrary',
             ]);
         } catch (\Exception $e) {
-            echo "Seeding error: " . $e->getMessage() . "\n";
+            echo 'Seeding error: '.$e->getMessage()."\n";
         }
     }
 }

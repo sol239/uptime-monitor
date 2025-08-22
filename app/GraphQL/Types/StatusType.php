@@ -20,14 +20,14 @@ class StatusType extends GraphQLType
                 'description' => 'DateTime of the status (ISO8601, xsd:dateTime)',
                 'resolve' => function ($root) {
                     return $root['date']->toIso8601String();
-                }
+                },
             ],
             'ok' => [
                 'type' => Type::nonNull(Type::boolean()),
                 'description' => 'True if monitor succeeded',
                 'resolve' => function ($root) {
                     return $root['ok'];
-                }
+                },
             ],
             'responseTime' => [
                 'type' => Type::int(),

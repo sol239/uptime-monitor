@@ -40,10 +40,6 @@ onMounted(() => {
 onUnmounted(() => {
     window.removeEventListener('resize', handleResize);
 });
-
-const historyMode = ref('status');
-const history = ref([]);
-const loadingHistory = ref(false);
 let intervalId: any = null;
 
 // Unified logs data - replaces separate data sources
@@ -78,7 +74,7 @@ function saveMonitor() {
             showMonitorForm.value = false;
         })
         .catch(() => { });
-    console.log("Form data:", payload);
+    console.log('Form data:', payload);
 }
 
 watch(saveSuccess, (v) => {
@@ -93,7 +89,7 @@ async function fetchSingleLog() {
         const { data } = await axios.get(`/api/v1/monitors/${monitor.value.id}/logs`);
         logsData.value = data.logs || [];
         // Set monitor.status to latest log status if available
-        console.log("Fetched logs data:", logsData.value);
+        console.log('Fetched logs data:', logsData.value);
         if (logsData.value.length > 0) {
             monitor.value.status = logsData.value[0].status;
             console.log(monitor.value.status);
@@ -189,7 +185,6 @@ const paginatedListHistory = computed(() => {
     return filteredListHistory.value.slice(start, end);
 });
 
-const listTotal = computed(() => filteredListHistory.value.length);
 const listTotalPages = computed(() => Math.ceil(filteredListHistory.value.length / listPageSize.value));
 
 // Updated calendar mode - uses logsData
@@ -256,30 +251,6 @@ const calendarDays = computed(() => {
     }
     return days;
 });
-
-// Group calendar days into weeks for table display
-const calendarWeeks = computed(() => {
-    const weeks = [];
-    const days = [...calendarDays.value];
-
-    // Add empty cells at the beginning to align with Monday start
-    const firstDay = days[0]?.date;
-    if (firstDay) {
-        const dayOfWeek = (firstDay.getDay() + 6) % 7; // Convert Sunday=0 to Monday=0
-        for (let i = 0; i < dayOfWeek; i++) {
-            days.unshift(null);
-        }
-    }
-
-    // Group into weeks (7 days each)
-    for (let i = 0; i < days.length; i += 7) {
-        weeks.push(days.slice(i, i + 7));
-    }
-
-    return weeks;
-});
-
-const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 // Date formatting helper
 const formatDateTime = (dateString: string) => {
@@ -374,13 +345,11 @@ const breadcrumbs: BreadcrumbItem[] = [
 // Function to split and trim badge labels
 function getBadgeLabels(badgeLabel: string): string[] {
     if (!badgeLabel) return [];
-    return badgeLabel.split(',').map(l => l.trim()).filter(Boolean);
+    return badgeLabel
+        .split(',')
+        .map((l) => l.trim())
+        .filter(Boolean);
 }
-
-// Calculate dynamic container height
-const containerHeight = computed(() => {
-    return `${viewportHeight.value * 0.9}px`;
-});
 
 // Sorting state for history table
 const sortState = ref({
@@ -456,13 +425,11 @@ function groupRectsByMonth(rects: any[]) {
                 <h1 class="mb-4 text-center text-3xl font-extrabold tracking-tight drop-shadow-md">Monitor Details</h1>
 
                 <!-- Animated success message -->
-                <div v-if="saveSuccess" class="fixed top-5 right-5 rounded bg-green-500 p-3 text-white">
-                    Saved successfully!
-                </div>
+                <div v-if="saveSuccess" class="fixed top-5 right-5 rounded bg-green-500 p-3 text-white">Saved
+                    successfully!</div>
 
                 <!-- Info + History side by side -->
                 <div>
-
                     <!-- Monitor Info Section -->
                     <div class="mb-8">
                         <div class="mb-4 flex items-center justify-between">
@@ -491,7 +458,7 @@ function groupRectsByMonth(rects: any[]) {
                                         <p class="text-sm">{{ monitor.periodicity }}s</p>
                                     </div>
                                     <div>
-                                        <span class="text-xs font-semibold text-gray-300 mb-2 block">Badge
+                                        <span class="mb-2 block text-xs font-semibold text-gray-300">Badge
                                             Labels:</span>
                                         <div class="mt-1 flex flex-wrap gap-1">
                                             <span v-for="label in getBadgeLabels(monitor.badge_label)" :key="label"
@@ -559,7 +526,10 @@ function groupRectsByMonth(rects: any[]) {
                                             <input type="number" v-model.number="form.periodicity" placeholder="60"
                                                 min="5" max="300"
                                                 class="w-full rounded border bg-gray-50 px-3 py-2 dark:bg-zinc-900"
-                                                :class="form.periodicity && (form.periodicity < 5 || form.periodicity > 300) ? 'border-red-500 bg-red-50 dark:bg-red-900/20' : ''" />
+                                                :class="form.periodicity && (form.periodicity < 5 || form.periodicity > 300)
+                                                        ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
+                                                        : ''
+                                                    " />
                                         </div>
                                     </div>
                                     <div class="grid grid-cols-2 gap-3">
@@ -611,7 +581,10 @@ function groupRectsByMonth(rects: any[]) {
                                     </div>
 
                                     <div class="flex justify-end gap-2">
-                                        <button type="button" @click="resetMonitorForm(); showMonitorForm = false"
+                                        <button type="button" @click="
+                                            resetMonitorForm();
+                                        showMonitorForm = false;
+                                        "
                                             class="rounded border px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">
                                             Cancel
                                         </button>
@@ -661,7 +634,7 @@ function groupRectsByMonth(rects: any[]) {
                                     <table class="min-w-full divide-y divide-gray-200">
                                         <thead class="sticky top-0 bg-[#171717]">
                                             <tr>
-                                                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700 cursor-pointer select-none"
+                                                <th class="cursor-pointer px-4 py-2 text-left text-xs font-semibold text-gray-700 select-none"
                                                     @click="cycleSort('started_at')"
                                                     :class="{ 'text-blue-500': sortState.column === 'started_at' }"
                                                     :title="'Sort by Started At'">
@@ -671,7 +644,7 @@ function groupRectsByMonth(rects: any[]) {
                                                         <span v-else-if="sortState.direction === 'desc'">&#9660;</span>
                                                     </span>
                                                 </th>
-                                                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700 cursor-pointer select-none"
+                                                <th class="cursor-pointer px-4 py-2 text-left text-xs font-semibold text-gray-700 select-none"
                                                     @click="cycleSort('status')"
                                                     :class="{ 'text-blue-500': sortState.column === 'status' }"
                                                     :title="'Sort by Status'">
@@ -681,7 +654,7 @@ function groupRectsByMonth(rects: any[]) {
                                                         <span v-else-if="sortState.direction === 'desc'">&#9660;</span>
                                                     </span>
                                                 </th>
-                                                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700 cursor-pointer select-none"
+                                                <th class="cursor-pointer px-4 py-2 text-left text-xs font-semibold text-gray-700 select-none"
                                                     @click="cycleSort('response_time_ms')"
                                                     :class="{ 'text-blue-500': sortState.column === 'response_time_ms' }"
                                                     :title="'Sort by Response Time'">
@@ -703,8 +676,7 @@ function groupRectsByMonth(rects: any[]) {
                                                     </span>
                                                     <span v-else
                                                         class="inline-block rounded bg-red-600 px-2 py-1 text-xs text-white">
-                                                        Failed
-                                                    </span>
+                                                        Failed </span>
                                                 </td>
                                                 <td class="px-4 py-2 text-sm">{{ item.response_time_ms }}</td>
                                             </tr>
@@ -741,23 +713,21 @@ function groupRectsByMonth(rects: any[]) {
                             <!-- Calendar Mode -->
                             <div v-if="historyViewMode === 'calendar'">
                                 <div class="rounded-lg bg-[#171717] p-4" style="border: 2px solid white">
-                                    <h3 class="mb-4 text-center font-bold text-white">Monitor Activity
-                                    </h3>
+                                    <h3 class="mb-4 text-center font-bold text-white">Monitor Activity</h3>
 
                                     <!-- SVG Horizontal Calendar Bar -->
                                     <div class="mb-6 flex flex-col gap-2">
                                         <div v-for="(month, idx) in groupRectsByMonth(calendarSvgRects)" :key="idx"
                                             class="flex items-center gap-2">
-
                                             <!-- Month label on the left -->
-                                            <div class="text-xs text-gray-300 font-semibold w-12 text-right">
+                                            <div class="w-12 text-right text-xs font-semibold text-gray-300">
                                                 {{ month.label }}
                                             </div>
 
                                             <!-- SVG bar -->
                                             <svg :width="Math.max(month.rects.length * 24, 400)" height="30"
                                                 xmlns="http://www.w3.org/2000/svg">
-                                                <g v-for="(rect, rIdx) in month.rects" :key="rect.date">
+                                                <g v-for="(rect, rIdx) in month.rects" :key="rect.date + '-' + rIdx">
                                                     <!-- Rectangle -->
                                                     <rect height="18" width="18" :x="rIdx * 24" y="0" :fill="rect.fill"
                                                         :fill-opacity="rect.fillOpacity" rx="2.75" ry="2.75">
@@ -766,7 +736,8 @@ function groupRectsByMonth(rects: any[]) {
 
                                                     <!-- Day number inside rectangle -->
                                                     <text :x="rIdx * 24 + 9" y="10.5" font-size="10" font-weight="bold"
-                                                        fill="#ffffff" text-anchor="middle" alignment-baseline="middle">
+                                                        fill="#ffffff" text-anchor="middle" alignment-baseline="middle"
+                                                        :key="'text-' + rect.date + '-' + rIdx">
                                                         {{ new Date(rect.date).getDate() }}
                                                     </text>
                                                 </g>
@@ -774,16 +745,20 @@ function groupRectsByMonth(rects: any[]) {
                                         </div>
                                     </div>
 
-
                                     <!-- Summary stats -->
                                     <div class="mt-4 text-center text-sm text-gray-400">
                                         <div class="flex justify-center gap-4 text-xs">
                                             <span>Total Days: {{calendarDays.filter((d) => d.summary?.total > 0).length
                                                 }}</span>
-                                            <span>Perfect Days: {{calendarDays.filter((d) => d.summary?.total > 0 &&
-                                                d.summary.failed === 0).length}}</span>
-                                            <span>Issues: {{calendarDays.filter((d) => d.summary?.total > 0 &&
-                                                d.summary.failed / d.summary.total > 0.05).length}}</span>
+                                            <span>Perfect Days:
+                                                {{calendarDays.filter((d) => d.summary?.total > 0 && d.summary.failed
+                                                === 0).length }}</span>
+                                            <span>Issues:
+                                                {{
+                                                    calendarDays.filter((d) => d.summary?.total > 0 && d.summary.failed /
+                                                        d.summary.total > 0.05)
+                                                        .length
+                                                }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -797,24 +772,24 @@ function groupRectsByMonth(rects: any[]) {
                                         <!-- Grid lines -->
                                         <g>
                                             <!-- Horizontal grid lines (y-axis ticks) -->
-                                            <template v-for="tick in 5">
+                                            <template v-for="tick in 5" :key="tick">
                                                 <line x1="40" :y1="260 - (tick - 1) * (220 / 4)" x2="580"
                                                     :y2="260 - (tick - 1) * (220 / 4)" stroke="#444"
                                                     stroke-dasharray="2,2" />
                                             </template>
+
                                             <!-- Vertical grid lines (for each data point) -->
                                             <template v-if="graphData.length">
-                                                <line v-for="(item, idx) in graphData" :key="item.id"
+                                                <line v-for="(item, idx) in graphData" :key="item.id + '-' + idx"
                                                     :x1="40 + idx * (560 / Math.max(graphData.length - 1, 1))" y1="40"
                                                     :x2="40 + idx * (560 / Math.max(graphData.length - 1, 1))" y2="260"
                                                     stroke="#444" stroke-dasharray="2,2" />
                                             </template>
                                         </g>
                                         <g v-if="graphData.length">
-                                            <template v-for="(item, idx) in graphData" :key="item.id">
-                                                <circle :cx="40 + idx * (560 / Math.max(graphData.length - 1, 1))"
-                                                    :cy="260 - (item.response_time_ms / Math.max(...graphData.map((d) => d.response_time_ms), 1)) * 220"
-                                                    r="3" fill="#3b82f6"
+                                            <template v-for="(item, idx) in graphData" :key="item.id + '-' + idx">
+                                                <circle :cx="40 + idx * (560 / Math.max(graphData.length - 1, 1))" :cy="260 - (item.response_time_ms / Math.max(...graphData.map((d) => d.response_time_ms), 1)) * 220
+                                                    " r="3" fill="#3b82f6"
                                                     :title="`${item.started_at}: ${item.response_time_ms}ms`" />
                                             </template>
                                         </g>
@@ -825,30 +800,26 @@ function groupRectsByMonth(rects: any[]) {
                                         <text x="500" y="280" fill="#fff" font-size="12">Time</text>
                                         <!-- Y-axis labels -->
                                         <g>
-                                            <template v-for="tick in 5">
+                                            <template v-for="tick in 5" :key="'yaxis-tick-' + tick">
                                                 <line :x1="35" :y1="260 - (tick - 1) * (220 / 4)" :x2="40"
                                                     :y2="260 - (tick - 1) * (220 / 4)" stroke="#fff" />
                                                 <text :x="0" :y="264 - (tick - 1) * (220 / 4)" fill="#fff"
                                                     font-size="11">
-                                                    {{
-                                                        Math.round(
-                                                            (Math.max(...graphData.map((d) => d.response_time_ms), 1) * (tick -
-                                                                1)) / 4
-                                                        )
-                                                    }} </text>
+                                                    {{Math.round((Math.max(...graphData.map((d) => d.response_time_ms),
+                                                    1) * (tick - 1)) / 4) }}
+                                                </text>
                                             </template>
                                         </g>
                                     </svg>
-                                    <div v-if="graphData.length === 0" class="p-4 text-center text-gray-500"> No data
-                                        available for graph. </div>
+                                    <div v-if="graphData.length === 0" class="p-4 text-center text-gray-500">No data
+                                        available for graph.</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div v-if="graphData.length === 0" class="p-4 text-center text-gray-500">
-                    No data available for graph.
+                <div v-if="graphData.length === 0" class="p-4 text-center text-gray-500">No data available for graph.
                 </div>
             </div>
         </div>

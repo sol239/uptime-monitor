@@ -12,6 +12,7 @@ describe('API Test - GET /monitors without auth', () => {
         expect(response.body).to.be.an('array');
 
         response.body.forEach(monitor => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-expressions
           expect(monitor.label).to.be.a('string').and.not.empty;
         });
 

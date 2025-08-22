@@ -40,8 +40,6 @@ const monitors = ref(page.props.monitors || []);
 
 // Monitor filters - now just label
 const filterLabel = ref('');
-const filterType = ref('');
-const filterStatus = ref('');
 
 // Add sorting for type and status
 const typeDirection = ref<'all' | 'ping' | 'website'>('all');
@@ -164,6 +162,7 @@ function resetMonitorForm() {
     monitorKeywords.value = '';
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function openEditForm(monitor: any) {
     editingMonitor.value = monitor;
     monitorLabel.value = monitor.label;

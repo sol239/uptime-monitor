@@ -164,6 +164,35 @@ It uses OpenAPI/Swagger to document its RESTful API endpoints. You can find the 
 
 ## Additional Information
 
+### Code Quality
+
+```shell
+# Laravel Pint lint code check (tests without fixing)
+npm run lint:laravel:check
+
+# Laravel Pint lint code fix
+npm run lint:laravel
+
+# JavaScript/TypeScript ESLint code check (tests without fixing)
+npm run lint:js:check
+
+# JavaScript/TypeScript ESLint code fix
+npm run lint:js
+
+# Run both PHP and JS linters and auto-fix
+npm run lint
+
+# Check code formatting with Prettier
+npm run format:check
+
+# Format code with Prettier
+npm run format
+```
+
+---
+
+### Contact
+
 You can contact me at [david.valek17@gmail.com](mailto:david.valek17@gmail.com).
 
 You can find the assignment specification at [this link](https://webik.ms.mff.cuni.cz/nswi153/seminar-project/).
