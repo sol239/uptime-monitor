@@ -6,7 +6,7 @@ if [ -z "$APP_KEY" ]; then
   php artisan key:generate --force
 fi
 
-php artisan migrate:fresh --seed --force
+php artisan migrate --force
 php artisan l5-swagger:generate
 
 exec "$@"

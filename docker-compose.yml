@@ -9,7 +9,6 @@ services:
       - ./app:/var/www/app:cached
       - ./routes:/var/www/routes:cached
       - ./resources:/var/www/resources:cached
-      - ./public:/var/www/public:cached
       - ./config:/var/www/config:cached
       - ./database:/var/www/database:cached
     ports:

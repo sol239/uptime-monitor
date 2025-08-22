@@ -866,9 +866,6 @@ onUnmounted(() => {
                         </div>
                     </div>
                 </div>
-
-                <div v-if="graphData.length === 0" class="p-4 text-center text-gray-500">No data available for graph.
-                </div>
             </div>
         </div>
     </AppLayout>
