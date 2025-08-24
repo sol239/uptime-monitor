@@ -53,6 +53,9 @@ describe('Laravel + Inertia Login', () => {
     
     // edit monitor
     cy.contains('Edit Monitor').click();
+
+    cy.wait(500);
+
     cy.get('input.monitor-label-input').clear().type('My Edited Ping Monitor');
     cy.get('button[type="submit"]').contains('Save Monitor').click();
 

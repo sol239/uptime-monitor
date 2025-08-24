@@ -70,6 +70,7 @@ services:
       dockerfile: Dockerfile
     container_name: php-checker
     working_dir: /app
+    profiles: ["php"]
     volumes:
       - ./services/php-checker:/app:cached
     environment:
@@ -80,9 +81,31 @@ services:
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
     depends_on:
+      mysql:
+        condition: service_healthy
+      app:
+        condition: service_healthy
+    command: php main.php
+  python-checker:
+    build:
+      context: ./services/python-checker
+      dockerfile: Dockerfile
+    container_name: python-checker
+    working_dir: /app
+    profiles: ["python"]
+    volumes:
+      - ./services/python-checker:/app:cached
+    environment:
+      DB_CONNECTION: ${DB_CONNECTION}
+      DB_HOST: mysql
+      DB_PORT: ${DB_PORT}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+    depends_on:
       - app
       - mysql
-    command: php main.php
+    command: python main.py
 
 
 volumes:

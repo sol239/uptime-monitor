@@ -557,7 +557,7 @@ onUnmounted(() => {
                                     <div>
                                         <label class="mb-1 block text-sm font-semibold">Label</label>
                                         <input type="text" v-model="form.label"
-                                            class="w-full rounded border bg-gray-50 px-3 py-2 dark:bg-zinc-900" />
+                                            class="w-full rounded border bg-gray-50 px-3 py-2 dark:bg-zinc-900 monitor-label-input"/>
                                     </div>
                                     <div class="grid grid-cols-2 gap-3">
                                         <div>

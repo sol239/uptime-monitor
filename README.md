@@ -27,6 +27,9 @@ In `.env` file you need to set DB_HOST to `my_sql` which is the name of the DB s
 git clone https://github.com/sol239/uptime-monitor
 cd uptime-monitor
 
+# Copy .env.example to .env and edit the file based on your setup
+cp .env.example .env
+
 # Python based monitor checking service 
 docker compose --profile python build
 
@@ -38,19 +41,21 @@ docker compose --profile php build
 
 In `.env` file you need to set DB_HOST to `localhost` which is the name of the DB service in compose file.
 
-In `.env` file you need to set DB_HOST to `localhost` which is the name of the DB service in compose file.
-
 ```shell
 git clone https://github.com/sol239/uptime-monitor
 cd uptime-monitor
 
-
+# Install PHP and JavaScript dependencies
 composer install
 npm install
 
+# Copy .env.example to .env and edit the file based on your setup
 cp .env.example .env
+
+# Regenerate application key
 php artisan key:generate
 
+# Run migrations
 php artisan migrate
 
 # Optionally: seeding the database with testing data --> for tests.
@@ -87,6 +92,9 @@ php artisan serve
 
 # Run the front end
 npm run dev
+
+# Or you can run 'composer run dev'
+ for both.
 
 # PHP Monitor Service
 php services/php-checker/Main.php

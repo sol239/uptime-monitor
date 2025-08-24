@@ -15,6 +15,9 @@ describe('Laravel + Inertia Login', () => {
     // Submit the form
     cy.get('button[type="submit"]').click();
 
+    cy.wait(5000);
+
+
     // Assert login worked (adjust URL/text to match your app)
     cy.url().should('include', '/projects');
     cy.contains('Projects').should('be.visible');

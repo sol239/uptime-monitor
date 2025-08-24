@@ -166,7 +166,7 @@ function createMonitor() {
     if (!monitorLabel.value || !monitorType.value || !monitorPeriodicity.value) return;
     const newMonitor: any = {
         label: monitorLabel.value,
-        type: monitorType.value,
+        monitor_type: monitorType.value,
         periodicity: monitorPeriodicity.value,
         badge_label: monitorBadgeLabel.value,
         status: monitorStatus.value,
@@ -183,6 +183,7 @@ function createMonitor() {
             .map((k) => k.trim())
             .filter((k) => k);
     }
+    console.log("Creating monitor:", newMonitor);
     axios
         .post('/api/v1/monitors', newMonitor)
         .then((response) => {
@@ -240,7 +241,7 @@ function updateMonitor() {
     if (!editingMonitor.value) return;
     const updatedMonitor: any = {
         label: monitorLabel.value,
-        type: monitorType.value,
+        monitor_type: monitorType.value,
         periodicity: monitorPeriodicity.value,
         badge_label: monitorBadgeLabel.value,
         status: monitorStatus.value,
