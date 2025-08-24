@@ -20,7 +20,7 @@ use Illuminate\Database\Eloquent\Model;
  * )
  */
 class MonitorLog extends Model
-{   
+{
     use HasFactory;
 
     /*

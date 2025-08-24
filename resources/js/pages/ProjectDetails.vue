@@ -1,10 +1,10 @@
 <script setup lang="ts">
 /* 1. Imports */
-import { ref, computed, reactive, onMounted, onUnmounted, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 
 /* 2. Stores */
 // No Pinia stores used
@@ -151,7 +151,7 @@ function save() {
             label: form.label,
             tags: form.tags,
         })
-        .then((response) => {
+        .then(() => {
             saveSuccess.value = true;
         })
         .catch((error) => {
@@ -183,7 +183,7 @@ function createMonitor() {
             .map((k) => k.trim())
             .filter((k) => k);
     }
-    console.log("Creating monitor:", newMonitor);
+    console.log('Creating monitor:', newMonitor);
     axios
         .post('/api/v1/monitors', newMonitor)
         .then((response) => {
@@ -216,6 +216,7 @@ function resetMonitorForm() {
  * Open edit monitor form
  * @param {any} monitor
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function openEditForm(monitor: any) {
     editingMonitor.value = monitor;
     monitorLabel.value = monitor.label;
@@ -337,7 +338,6 @@ function cycleStatusFilter() {
 
 /* 13. defineExpose */
 // No expose needed for this page
-
 </script>
 
 <template>

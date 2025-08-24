@@ -1,10 +1,10 @@
 <script setup lang="ts">
 /* 1. Imports */
-import { ref, computed, reactive, onMounted, onUnmounted, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 
 /* 2. Stores */
 // No Pinia stores used
@@ -34,8 +34,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 /* 8. State (ref, reactive) */
 /** Monitor data */
 const monitor = ref(page.props.monitor);
-/** Project data */
-const project = ref(page.props.project);
 /** Success flag for save */
 const saveSuccess = ref(false);
 /** Show monitor form flag */
@@ -171,13 +169,14 @@ const calendarDays = computed(() => {
         endDate = new Date(listFilters.endDate);
     } else {
         endDate = new Date();
-        endDate.setHours(23,59,59,999); // ensure today is included
+        endDate.setHours(23, 59, 59, 999); // ensure today is included
         startDate = new Date(endDate);
         startDate.setDate(endDate.getDate() - 89); // last 90 days
     }
     const days = [];
     const currentDate = new Date(startDate);
-    while (currentDate <= endDate) { // include endDate itself
+    while (currentDate <= endDate) {
+        // include endDate itself
         const dateStr = currentDate.toISOString().split('T')[0];
         const summary = calendarData.value[dateStr];
         let color = '#2d3748';
@@ -336,7 +335,7 @@ function saveMonitor() {
             saveSuccess.value = true;
             showMonitorForm.value = false;
         })
-        .catch(() => { });
+        .catch(() => {});
     console.log('Form data:', payload);
 }
 
@@ -467,11 +466,9 @@ onUnmounted(() => {
 
 /* 13. defineExpose */
 // No expose needed for this page
-
 </script>
 
 <template>
-
     <Head :title="`Monitor Details - ${form.label}`" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="mx-auto mt-8 w-4xl max-w-4xl">
@@ -479,8 +476,7 @@ onUnmounted(() => {
                 <h1 class="mb-4 text-center text-3xl font-extrabold tracking-tight drop-shadow-md">Monitor Details</h1>
 
                 <!-- Animated success message -->
-                <div v-if="saveSuccess" class="fixed top-5 right-5 rounded bg-green-500 p-3 text-white">Saved
-                    successfully!</div>
+                <div v-if="saveSuccess" class="fixed top-5 right-5 rounded bg-green-500 p-3 text-white">Saved successfully!</div>
 
                 <!-- Info + History side by side -->
                 <div>
@@ -488,16 +484,21 @@ onUnmounted(() => {
                     <div class="mb-8">
                         <div class="mb-4 flex items-center justify-between">
                             <h2 class="text-xl font-bold">Monitor Information</h2>
-                            <button @click="showMonitorForm = !showMonitorForm"
-                                class="rounded bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700">
+                            <button
+                                @click="showMonitorForm = !showMonitorForm"
+                                class="rounded bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700"
+                            >
                                 {{ showMonitorForm ? 'Cancel' : 'Edit Monitor' }}
                             </button>
                         </div>
 
                         <div>
                             <!-- Info Display -->
-                            <div v-if="!showMonitorForm" class="rounded-lg border p-3"
-                                :style="{ background: '#171717', color: '#fff', borderColor: 'white' }">
+                            <div
+                                v-if="!showMonitorForm"
+                                class="rounded-lg border p-3"
+                                :style="{ background: '#171717', color: '#fff', borderColor: 'white' }"
+                            >
                                 <div class="grid grid-cols-1 gap-4 text-sm md:grid-cols-3">
                                     <div>
                                         <span class="text-xs font-semibold text-gray-300">Label:</span>
@@ -512,21 +513,23 @@ onUnmounted(() => {
                                         <p class="text-sm">{{ monitor.periodicity }}s</p>
                                     </div>
                                     <div>
-                                        <span class="mb-2 block text-xs font-semibold text-gray-300">Badge
-                                            Labels:</span>
+                                        <span class="mb-2 block text-xs font-semibold text-gray-300">Badge Labels:</span>
                                         <div class="mt-1 flex flex-wrap gap-1">
-                                            <span v-for="label in getBadgeLabels(monitor.badge_label)" :key="label"
-                                                class="inline-block rounded bg-[#262626] px-1 py-0.5 text-xs text-white">
+                                            <span
+                                                v-for="label in getBadgeLabels(monitor.badge_label)"
+                                                :key="label"
+                                                class="inline-block rounded bg-[#262626] px-1 py-0.5 text-xs text-white"
+                                            >
                                                 {{ label }}
                                             </span>
-                                            <span v-if="getBadgeLabels(monitor.badge_label).length === 0"
-                                                class="text-xs text-gray-400">No badge labels set</span>
+                                            <span v-if="getBadgeLabels(monitor.badge_label).length === 0" class="text-xs text-gray-400"
+                                                >No badge labels set</span
+                                            >
                                         </div>
                                     </div>
                                     <div>
                                         <span class="text-xs font-semibold text-gray-300">Status:</span>
-                                        <p class="text-sm font-bold"
-                                            :class="monitor.status === 'succeeded' ? 'text-green-500' : 'text-red-500'">
+                                        <p class="text-sm font-bold" :class="monitor.status === 'succeeded' ? 'text-green-500' : 'text-red-500'">
                                             {{ monitor.status }}
                                         </p>
                                     </div>
@@ -545,12 +548,16 @@ onUnmounted(() => {
                                     <div v-if="monitor.monitor_type === 'website'">
                                         <span class="text-xs font-semibold text-gray-300">Keywords:</span>
                                         <div class="mt-1 flex flex-wrap gap-1">
-                                            <span v-for="kw in monitor.keywords" :key="kw"
-                                                class="inline-block rounded bg-[#262626] px-1 py-0.5 text-xs text-white">
+                                            <span
+                                                v-for="kw in monitor.keywords"
+                                                :key="kw"
+                                                class="inline-block rounded bg-[#262626] px-1 py-0.5 text-xs text-white"
+                                            >
                                                 {{ kw }}
                                             </span>
-                                            <span v-if="!monitor.keywords || monitor.keywords.length === 0"
-                                                class="text-xs text-gray-400">No keywords set</span>
+                                            <span v-if="!monitor.keywords || monitor.keywords.length === 0" class="text-xs text-gray-400"
+                                                >No keywords set</span
+                                            >
                                         </div>
                                     </div>
                                 </div>
@@ -562,88 +569,115 @@ onUnmounted(() => {
                                 <form @submit.prevent="saveMonitor" class="space-y-3">
                                     <div>
                                         <label class="mb-1 block text-sm font-semibold">Label</label>
-                                        <input type="text" v-model="form.label"
-                                            class="w-full rounded border bg-gray-50 px-3 py-2 dark:bg-zinc-900 monitor-label-input"/>
+                                        <input
+                                            type="text"
+                                            v-model="form.label"
+                                            class="monitor-label-input w-full rounded border bg-gray-50 px-3 py-2 dark:bg-zinc-900"
+                                        />
                                     </div>
                                     <div class="grid grid-cols-2 gap-3">
                                         <div>
                                             <label class="mb-1 block text-sm font-semibold">Type</label>
-                                            <select v-model="form.monitor_type"
-                                                class="w-full rounded border bg-gray-50 px-3 py-2 dark:bg-zinc-900">
+                                            <select v-model="form.monitor_type" class="w-full rounded border bg-gray-50 px-3 py-2 dark:bg-zinc-900">
                                                 <option value="ping">Ping Monitor</option>
                                                 <option value="website">Website Monitor</option>
                                             </select>
                                         </div>
                                         <div>
-                                            <label class="mb-1 block text-sm font-semibold">Periodicity
-                                                (seconds)</label>
-                                            <input type="number" v-model.number="form.periodicity" placeholder="60"
-                                                min="5" max="300"
+                                            <label class="mb-1 block text-sm font-semibold">Periodicity (seconds)</label>
+                                            <input
+                                                type="number"
+                                                v-model.number="form.periodicity"
+                                                placeholder="60"
+                                                min="5"
+                                                max="300"
                                                 class="w-full rounded border bg-gray-50 px-3 py-2 dark:bg-zinc-900"
-                                                :class="form.periodicity && (form.periodicity < 5 || form.periodicity > 300)
+                                                :class="
+                                                    form.periodicity && (form.periodicity < 5 || form.periodicity > 300)
                                                         ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
                                                         : ''
-                                                    " />
+                                                "
+                                            />
                                         </div>
                                     </div>
                                     <div class="grid grid-cols-2 gap-3">
                                         <div>
                                             <label class="mb-1 block text-sm font-semibold">Badge Label</label>
-                                            <input type="text" v-model="form.badge_label" placeholder="Badge label"
-                                                class="w-full rounded border bg-gray-50 px-3 py-2 dark:bg-zinc-900" />
+                                            <input
+                                                type="text"
+                                                v-model="form.badge_label"
+                                                placeholder="Badge label"
+                                                class="w-full rounded border bg-gray-50 px-3 py-2 dark:bg-zinc-900"
+                                            />
                                         </div>
                                     </div>
 
                                     <!-- Type-specific fields -->
-                                    <div v-if="form.monitor_type === 'ping'"
-                                        class="grid grid-cols-2 gap-3 rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
+                                    <div
+                                        v-if="form.monitor_type === 'ping'"
+                                        class="grid grid-cols-2 gap-3 rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20"
+                                    >
                                         <div>
                                             <label class="mb-1 block text-sm font-medium">Hostname or IP</label>
-                                            <input type="text" v-model="form.hostname"
+                                            <input
+                                                type="text"
+                                                v-model="form.hostname"
                                                 placeholder="example.com or 192.168.1.1"
-                                                class="w-full rounded border bg-gray-50 px-3 py-2 dark:bg-zinc-900" />
+                                                class="w-full rounded border bg-gray-50 px-3 py-2 dark:bg-zinc-900"
+                                            />
                                         </div>
                                         <div>
                                             <label class="mb-1 block text-sm font-medium">Port</label>
-                                            <input type="number" v-model.number="form.port" placeholder="80" min="1"
+                                            <input
+                                                type="number"
+                                                v-model.number="form.port"
+                                                placeholder="80"
+                                                min="1"
                                                 max="65535"
-                                                class="w-full rounded border bg-gray-50 px-3 py-2 dark:bg-zinc-900" />
+                                                class="w-full rounded border bg-gray-50 px-3 py-2 dark:bg-zinc-900"
+                                            />
                                         </div>
                                     </div>
 
-                                    <div v-if="form.monitor_type === 'website'"
-                                        class="space-y-3 rounded-lg bg-green-50 p-3 dark:bg-green-900/20">
+                                    <div v-if="form.monitor_type === 'website'" class="space-y-3 rounded-lg bg-green-50 p-3 dark:bg-green-900/20">
                                         <div>
                                             <label class="mb-1 block text-sm font-medium">URL</label>
-                                            <input type="url" v-model="form.url" placeholder="https://example.com/page"
-                                                class="w-full rounded border bg-gray-50 px-3 py-2 dark:bg-zinc-900" />
+                                            <input
+                                                type="url"
+                                                v-model="form.url"
+                                                placeholder="https://example.com/page"
+                                                class="w-full rounded border bg-gray-50 px-3 py-2 dark:bg-zinc-900"
+                                            />
                                         </div>
                                         <div class="flex items-center gap-2">
-                                            <input type="checkbox" v-model="form.check_status" id="checkStatus"
-                                                class="rounded border-gray-300" />
+                                            <input type="checkbox" v-model="form.check_status" id="checkStatus" class="rounded border-gray-300" />
                                             <label for="checkStatus" class="text-sm font-medium">
                                                 Check Status (Fail if status not in 200-299 range)
                                             </label>
                                         </div>
                                         <div>
-                                            <label class="mb-1 block text-sm font-medium">Keywords
-                                                (comma-separated)</label>
-                                            <textarea v-model="form.keywords" placeholder="keyword1, keyword2, keyword3"
+                                            <label class="mb-1 block text-sm font-medium">Keywords (comma-separated)</label>
+                                            <textarea
+                                                v-model="form.keywords"
+                                                placeholder="keyword1, keyword2, keyword3"
                                                 class="w-full rounded border bg-gray-50 px-3 py-2 dark:bg-zinc-900"
-                                                rows="2"></textarea>
+                                                rows="2"
+                                            ></textarea>
                                         </div>
                                     </div>
 
                                     <div class="flex justify-end gap-2">
-                                        <button type="button" @click="
-                                            resetMonitorForm();
-                                        showMonitorForm = false;
-                                        "
-                                            class="rounded border px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                        <button
+                                            type="button"
+                                            @click="
+                                                resetMonitorForm();
+                                                showMonitorForm = false;
+                                            "
+                                            class="rounded border px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                        >
                                             Cancel
                                         </button>
-                                        <button type="submit"
-                                            class="rounded bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700">
+                                        <button type="submit" class="rounded bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700">
                                             Save Monitor
                                         </button>
                                     </div>
@@ -658,8 +692,7 @@ onUnmounted(() => {
                             <h2 class="text-xl font-bold">Monitor History</h2>
                             <div class="flex items-center gap-2">
                                 <label>View:</label>
-                                <select v-model="historyViewMode"
-                                    class="rounded border bg-gray-50 px-2 py-1 dark:bg-zinc-900">
+                                <select v-model="historyViewMode" class="rounded border bg-gray-50 px-2 py-1 dark:bg-zinc-900">
                                     <option value="list">List</option>
                                     <option value="calendar">Calendar</option>
                                     <option value="graph">Graph</option>
@@ -670,58 +703,89 @@ onUnmounted(() => {
                             <div class="mb-3 flex flex-wrap items-end gap-2">
                                 <div class="flex items-center gap-1">
                                     <label class="mb-1 block text-xs font-semibold">Start Date</label>
-                                    <input type="date" v-model="listFilters.startDate"
-                                        class="rounded border bg-gray-50 px-2 py-1 text-sm dark:bg-zinc-900" />
+                                    <input
+                                        type="date"
+                                        v-model="listFilters.startDate"
+                                        class="rounded border bg-gray-50 px-2 py-1 text-sm dark:bg-zinc-900"
+                                    />
                                     <!-- Reset button -->
-                                    <button type="button" @click="listFilters.startDate = ''; listFilters.endDate = ''"
-                                        class="ml-1 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
-                                        title="Reset date filters">
+                                    <button
+                                        type="button"
+                                        @click="
+                                            listFilters.startDate = '';
+                                            listFilters.endDate = '';
+                                        "
+                                        class="ml-1 rounded p-1 hover:bg-gray-200 dark:hover:bg-gray-700"
+                                        title="Reset date filters"
+                                    >
                                         <!-- Simple reset SVG icon -->
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M4 4v5h.582M20 20v-5h-.581M5.5 8A7.003 7.003 0 0112 5c3.866 0 7 3.134 7 7 0 1.657-.672 3.156-1.764 4.236M18.5 16A7.003 7.003 0 0112 19c-3.866 0-7-3.134-7-7 0-1.657.672-3.156 1.764-4.236"/>
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="18"
+                                            height="18"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M4 4v5h.582M20 20v-5h-.581M5.5 8A7.003 7.003 0 0112 5c3.866 0 7 3.134 7 7 0 1.657-.672 3.156-1.764 4.236M18.5 16A7.003 7.003 0 0112 19c-3.866 0-7-3.134-7-7 0-1.657.672-3.156 1.764-4.236"
+                                            />
                                         </svg>
                                     </button>
                                 </div>
                                 <div>
                                     <label class="mb-1 block text-xs font-semibold">End Date</label>
-                                    <input type="date" v-model="listFilters.endDate"
-                                        class="rounded border bg-gray-50 px-2 py-1 text-sm dark:bg-zinc-900" />
+                                    <input
+                                        type="date"
+                                        v-model="listFilters.endDate"
+                                        class="rounded border bg-gray-50 px-2 py-1 text-sm dark:bg-zinc-900"
+                                    />
                                 </div>
                             </div>
                         </div>
                         <div class="flex-1 overflow-auto">
                             <!-- List Mode -->
                             <div v-if="historyViewMode === 'list'">
-                                <div class="mb-4 overflow-auto rounded-lg bg-[#171717] shadow"
-                                    :style="`min-height: ${listPageSize * 48}px; border: 2px solid white`">
+                                <div
+                                    class="mb-4 overflow-auto rounded-lg bg-[#171717] shadow"
+                                    :style="`min-height: ${listPageSize * 48}px; border: 2px solid white`"
+                                >
                                     <table class="min-w-full divide-y divide-gray-200">
                                         <thead class="sticky top-0 bg-[#171717]">
                                             <tr>
-                                                <th class="cursor-pointer px-4 py-2 text-left text-xs font-semibold text-gray-700 select-none"
+                                                <th
+                                                    class="cursor-pointer px-4 py-2 text-left text-xs font-semibold text-gray-700 select-none"
                                                     @click="cycleSort('started_at')"
                                                     :class="{ 'text-blue-500': sortState.column === 'started_at' }"
-                                                    :title="'Sort by Started At'">
+                                                    :title="'Sort by Started At'"
+                                                >
                                                     Started At
                                                     <span v-if="sortState.column === 'started_at'">
                                                         <span v-if="sortState.direction === 'asc'">&#9650;</span>
                                                         <span v-else-if="sortState.direction === 'desc'">&#9660;</span>
                                                     </span>
                                                 </th>
-                                                <th class="cursor-pointer px-4 py-2 text-left text-xs font-semibold text-gray-700 select-none"
+                                                <th
+                                                    class="cursor-pointer px-4 py-2 text-left text-xs font-semibold text-gray-700 select-none"
                                                     @click="cycleSort('status')"
                                                     :class="{ 'text-blue-500': sortState.column === 'status' }"
-                                                    :title="'Sort by Status'">
+                                                    :title="'Sort by Status'"
+                                                >
                                                     Status
                                                     <span v-if="sortState.column === 'status'">
                                                         <span v-if="sortState.direction === 'asc'">&#9650;</span>
                                                         <span v-else-if="sortState.direction === 'desc'">&#9660;</span>
                                                     </span>
                                                 </th>
-                                                <th class="cursor-pointer px-4 py-2 text-left text-xs font-semibold text-gray-700 select-none"
+                                                <th
+                                                    class="cursor-pointer px-4 py-2 text-left text-xs font-semibold text-gray-700 select-none"
                                                     @click="cycleSort('response_time_ms')"
                                                     :class="{ 'text-blue-500': sortState.column === 'response_time_ms' }"
-                                                    :title="'Sort by Response Time'">
+                                                    :title="'Sort by Response Time'"
+                                                >
                                                     Response Time (ms)
                                                     <span v-if="sortState.column === 'response_time_ms'">
                                                         <span v-if="sortState.direction === 'asc'">&#9650;</span>
@@ -734,24 +798,22 @@ onUnmounted(() => {
                                             <tr v-for="item in paginatedListHistory" :key="item.id" class="h-12">
                                                 <td class="px-4 py-2 text-sm">{{ formatDateTime(item.started_at) }}</td>
                                                 <td class="px-4 py-2">
-                                                    <span v-if="item.status === 'succeeded'"
-                                                        class="inline-block rounded bg-emerald-600 px-2 py-1 text-xs text-white">
+                                                    <span
+                                                        v-if="item.status === 'succeeded'"
+                                                        class="inline-block rounded bg-emerald-600 px-2 py-1 text-xs text-white"
+                                                    >
                                                         Succeeded
                                                     </span>
-                                                    <span v-else
-                                                        class="inline-block rounded bg-red-600 px-2 py-1 text-xs text-white">
-                                                        Failed </span>
+                                                    <span v-else class="inline-block rounded bg-red-600 px-2 py-1 text-xs text-white"> Failed </span>
                                                 </td>
                                                 <td class="px-4 py-2 text-sm">{{ item.response_time_ms }}</td>
                                             </tr>
                                             <!-- Add empty rows to maintain fixed height -->
-                                            <tr v-for="n in Math.max(0, listPageSize - paginatedListHistory.length)"
-                                                :key="'empty-' + n" class="h-12">
+                                            <tr v-for="n in Math.max(0, listPageSize - paginatedListHistory.length)" :key="'empty-' + n" class="h-12">
                                                 <td class="px-4 py-2" colspan="3">&nbsp;</td>
                                             </tr>
                                             <tr v-if="paginatedListHistory.length === 0">
-                                                <td colspan="3" class="px-4 py-6 text-center text-gray-500">No history
-                                                    found.</td>
+                                                <td colspan="3" class="px-4 py-6 text-center text-gray-500">No history found.</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -759,16 +821,19 @@ onUnmounted(() => {
 
                                 <!-- Pagination Controls -->
                                 <div v-if="listTotalPages > 1" class="flex items-center justify-center gap-2">
-                                    <button @click="listFilters.page = Math.max(1, listFilters.page - 1)"
+                                    <button
+                                        @click="listFilters.page = Math.max(1, listFilters.page - 1)"
                                         :disabled="listFilters.page === 1"
-                                        class="rounded border bg-gray-100 px-3 py-1 text-gray-700 disabled:opacity-50 dark:bg-gray-700 dark:text-gray-200">
+                                        class="rounded border bg-gray-100 px-3 py-1 text-gray-700 disabled:opacity-50 dark:bg-gray-700 dark:text-gray-200"
+                                    >
                                         Prev
                                     </button>
-                                    <span class="mx-2 text-sm">Page {{ listFilters.page }} of {{ listTotalPages
-                                        }}</span>
-                                    <button @click="listFilters.page = Math.min(listTotalPages, listFilters.page + 1)"
+                                    <span class="mx-2 text-sm">Page {{ listFilters.page }} of {{ listTotalPages }}</span>
+                                    <button
+                                        @click="listFilters.page = Math.min(listTotalPages, listFilters.page + 1)"
                                         :disabled="listFilters.page === listTotalPages"
-                                        class="rounded border bg-gray-100 px-3 py-1 text-gray-700 disabled:opacity-50 dark:bg-gray-700 dark:text-gray-200">
+                                        class="rounded border bg-gray-100 px-3 py-1 text-gray-700 disabled:opacity-50 dark:bg-gray-700 dark:text-gray-200"
+                                    >
                                         Next
                                     </button>
                                 </div>
@@ -781,27 +846,40 @@ onUnmounted(() => {
 
                                     <!-- SVG Horizontal Calendar Bar -->
                                     <div class="mb-6 flex flex-col gap-2">
-                                        <div v-for="(month, idx) in groupRectsByMonth(calendarSvgRects)" :key="idx"
-                                            class="flex items-center gap-2">
+                                        <div v-for="(month, idx) in groupRectsByMonth(calendarSvgRects)" :key="idx" class="flex items-center gap-2">
                                             <!-- Month label on the left -->
                                             <div class="w-12 text-right text-xs font-semibold text-gray-300">
                                                 {{ month.label }}
                                             </div>
 
                                             <!-- SVG bar -->
-                                            <svg :width="Math.max(month.rects.length * 24, 400)" height="30"
-                                                xmlns="http://www.w3.org/2000/svg">
+                                            <svg :width="Math.max(month.rects.length * 24, 400)" height="30" xmlns="http://www.w3.org/2000/svg">
                                                 <g v-for="(rect, rIdx) in month.rects" :key="rect.date + '-' + rIdx">
                                                     <!-- Rectangle -->
-                                                    <rect height="18" width="18" :x="rIdx * 24" y="0" :fill="rect.fill"
-                                                        :fill-opacity="rect.fillOpacity" rx="2.75" ry="2.75">
+                                                    <rect
+                                                        height="18"
+                                                        width="18"
+                                                        :x="rIdx * 24"
+                                                        y="0"
+                                                        :fill="rect.fill"
+                                                        :fill-opacity="rect.fillOpacity"
+                                                        rx="2.75"
+                                                        ry="2.75"
+                                                    >
                                                         <title>{{ rect.date }} {{ rect.percent }}</title>
                                                     </rect>
 
                                                     <!-- Day number inside rectangle -->
-                                                    <text :x="rIdx * 24 + 9" y="10.5" font-size="10" font-weight="bold"
-                                                        fill="#ffffff" text-anchor="middle" alignment-baseline="middle"
-                                                        :key="'text-' + rect.date + '-' + rIdx">
+                                                    <text
+                                                        :x="rIdx * 24 + 9"
+                                                        y="10.5"
+                                                        font-size="10"
+                                                        font-weight="bold"
+                                                        fill="#ffffff"
+                                                        text-anchor="middle"
+                                                        alignment-baseline="middle"
+                                                        :key="'text-' + rect.date + '-' + rIdx"
+                                                    >
                                                         {{ new Date(rect.date).getDate() }}
                                                     </text>
                                                 </g>
@@ -812,17 +890,18 @@ onUnmounted(() => {
                                     <!-- Summary stats -->
                                     <div class="mt-4 text-center text-sm text-gray-400">
                                         <div class="flex justify-center gap-4 text-xs">
-                                            <span>Total Days: {{calendarDays.filter((d) => d.summary?.total > 0).length
-                                                }}</span>
-                                            <span>Perfect Days:
-                                                {{calendarDays.filter((d) => d.summary?.total > 0 && d.summary.failed
-                                                === 0).length }}</span>
-                                            <span>Issues:
+                                            <span>Total Days: {{ calendarDays.filter((d) => d.summary?.total > 0).length }}</span>
+                                            <span
+                                                >Perfect Days:
+                                                {{ calendarDays.filter((d) => d.summary?.total > 0 && d.summary.failed === 0).length }}</span
+                                            >
+                                            <span
+                                                >Issues:
                                                 {{
-                                                    calendarDays.filter((d) => d.summary?.total > 0 && d.summary.failed /
-                                                        d.summary.total > 0.05)
+                                                    calendarDays.filter((d) => d.summary?.total > 0 && d.summary.failed / d.summary.total > 0.05)
                                                         .length
-                                                }}</span>
+                                                }}</span
+                                            >
                                         </div>
                                     </div>
                                 </div>
@@ -831,30 +910,52 @@ onUnmounted(() => {
                             <!-- Graph Mode -->
                             <div v-if="historyViewMode === 'graph'">
                                 <div class="rounded-lg bg-[#171717] p-4" style="border: 2px solid white">
-                                    <svg :width="graphWidth" :height="graphHeight" class="w-full" viewBox="0 0 650 300"
-                                        preserveAspectRatio="xMidYMid meet">
+                                    <svg
+                                        :width="graphWidth"
+                                        :height="graphHeight"
+                                        class="w-full"
+                                        viewBox="0 0 650 300"
+                                        preserveAspectRatio="xMidYMid meet"
+                                    >
                                         <!-- Grid lines -->
                                         <g>
                                             <!-- Horizontal grid lines (y-axis ticks) -->
                                             <template v-for="tick in 5" :key="tick">
-                                                <line x1="40" :y1="260 - (tick - 1) * (220 / 4)" x2="580"
-                                                    :y2="260 - (tick - 1) * (220 / 4)" stroke="#444"
-                                                    stroke-dasharray="2,2" />
+                                                <line
+                                                    x1="40"
+                                                    :y1="260 - (tick - 1) * (220 / 4)"
+                                                    x2="580"
+                                                    :y2="260 - (tick - 1) * (220 / 4)"
+                                                    stroke="#444"
+                                                    stroke-dasharray="2,2"
+                                                />
                                             </template>
 
                                             <!-- Vertical grid lines (for each data point) -->
                                             <template v-if="graphData.length">
-                                                <line v-for="(item, idx) in graphData" :key="item.id + '-' + idx"
-                                                    :x1="40 + idx * (560 / Math.max(graphData.length - 1, 1))" y1="40"
-                                                    :x2="40 + idx * (560 / Math.max(graphData.length - 1, 1))" y2="260"
-                                                    stroke="#444" stroke-dasharray="2,2" />
+                                                <line
+                                                    v-for="(item, idx) in graphData"
+                                                    :key="item.id + '-' + idx"
+                                                    :x1="40 + idx * (560 / Math.max(graphData.length - 1, 1))"
+                                                    y1="40"
+                                                    :x2="40 + idx * (560 / Math.max(graphData.length - 1, 1))"
+                                                    y2="260"
+                                                    stroke="#444"
+                                                    stroke-dasharray="2,2"
+                                                />
                                             </template>
                                         </g>
                                         <g v-if="graphData.length">
                                             <template v-for="(item, idx) in graphData" :key="item.id + '-' + idx">
-                                                <circle :cx="40 + idx * (560 / Math.max(graphData.length - 1, 1))" :cy="260 - (item.response_time_ms / Math.max(...graphData.map((d) => d.response_time_ms), 1)) * 220
-                                                    " r="3" fill="#3b82f6"
-                                                    :title="`${item.started_at}: ${item.response_time_ms}ms`" />
+                                                <circle
+                                                    :cx="40 + idx * (560 / Math.max(graphData.length - 1, 1))"
+                                                    :cy="
+                                                        260 - (item.response_time_ms / Math.max(...graphData.map((d) => d.response_time_ms), 1)) * 220
+                                                    "
+                                                    r="3"
+                                                    fill="#3b82f6"
+                                                    :title="`${item.started_at}: ${item.response_time_ms}ms`"
+                                                />
                                             </template>
                                         </g>
                                         <!-- Axes -->
@@ -865,18 +966,20 @@ onUnmounted(() => {
                                         <!-- Y-axis labels -->
                                         <g>
                                             <template v-for="tick in 5" :key="'yaxis-tick-' + tick">
-                                                <line :x1="35" :y1="260 - (tick - 1) * (220 / 4)" :x2="40"
-                                                    :y2="260 - (tick - 1) * (220 / 4)" stroke="#fff" />
-                                                <text :x="0" :y="264 - (tick - 1) * (220 / 4)" fill="#fff"
-                                                    font-size="11">
-                                                    {{Math.round((Math.max(...graphData.map((d) => d.response_time_ms),
-                                                    1) * (tick - 1)) / 4) }}
+                                                <line
+                                                    :x1="35"
+                                                    :y1="260 - (tick - 1) * (220 / 4)"
+                                                    :x2="40"
+                                                    :y2="260 - (tick - 1) * (220 / 4)"
+                                                    stroke="#fff"
+                                                />
+                                                <text :x="0" :y="264 - (tick - 1) * (220 / 4)" fill="#fff" font-size="11">
+                                                    {{ Math.round((Math.max(...graphData.map((d) => d.response_time_ms), 1) * (tick - 1)) / 4) }}
                                                 </text>
                                             </template>
                                         </g>
                                     </svg>
-                                    <div v-if="graphData.length === 0" class="p-4 text-center text-gray-500">No data
-                                        available for graph.</div>
+                                    <div v-if="graphData.length === 0" class="p-4 text-center text-gray-500">No data available for graph.</div>
                                 </div>
                             </div>
                         </div>

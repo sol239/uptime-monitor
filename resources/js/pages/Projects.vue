@@ -1,10 +1,10 @@
 <script setup lang="ts">
 /* 1. Imports */
-import { ref, computed, reactive, onMounted, onUnmounted } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue';
 
 /* 2. Stores */
 // No Pinia stores used in this file
@@ -252,11 +252,9 @@ function save() {
 
 /* 13. defineExpose */
 // No expose needed for this page
-
 </script>
 
 <template>
-
     <Head title="Projects" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
@@ -272,30 +270,37 @@ function save() {
                     <form @submit.prevent="save">
                         <div class="mb-4">
                             <label class="mb-1 block text-sm font-semibold">Label</label>
-                            <input type="text" v-model="form.label"
-                                class="w-full rounded border bg-gray-50 px-3 py-2 dark:bg-zinc-900" />
+                            <input type="text" v-model="form.label" class="w-full rounded border bg-gray-50 px-3 py-2 dark:bg-zinc-900" />
                         </div>
                         <div class="mb-4">
                             <label class="mb-1 block text-sm font-semibold">Description</label>
-                            <textarea v-model="form.description"
-                                class="w-full rounded border bg-gray-50 px-3 py-2 dark:bg-zinc-900" rows="3"></textarea>
+                            <textarea
+                                v-model="form.description"
+                                class="w-full rounded border bg-gray-50 px-3 py-2 dark:bg-zinc-900"
+                                rows="3"
+                            ></textarea>
                         </div>
                         <div class="mb-4">
                             <label class="mb-1 block text-sm font-semibold">Tags</label>
-                            <input type="text" v-model="tagsInput" placeholder="Comma separated"
-                                class="w-full rounded border bg-gray-50 px-3 py-2 dark:bg-zinc-900" />
+                            <input
+                                type="text"
+                                v-model="tagsInput"
+                                placeholder="Comma separated"
+                                class="w-full rounded border bg-gray-50 px-3 py-2 dark:bg-zinc-900"
+                            />
                             <div class="mt-2 flex flex-wrap gap-2">
-                                <span v-for="tag in form.tags" :key="tag"
-                                    class="inline-block rounded bg-[#262626] px-2 py-1 text-xs">{{ tag }}</span>
+                                <span v-for="tag in form.tags" :key="tag" class="inline-block rounded bg-[#262626] px-2 py-1 text-xs">{{ tag }}</span>
                             </div>
                         </div>
                         <div class="flex justify-end gap-2">
-                            <button type="button" @click="showProjectForm = false"
-                                class="rounded border px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <button
+                                type="button"
+                                @click="showProjectForm = false"
+                                class="rounded border px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
                                 Cancel
                             </button>
-                            <button type="submit"
-                                class="rounded bg-emerald-600 px-4 py-2 text-white transition hover:bg-emerald-700">
+                            <button type="submit" class="rounded bg-emerald-600 px-4 py-2 text-white transition hover:bg-emerald-700">
                                 Save Project
                             </button>
                         </div>
@@ -303,34 +308,47 @@ function save() {
                 </div>
 
                 <div class="mb-4 flex flex-wrap items-center gap-4">
-                    <input type="text" v-model="filterLabel" placeholder="Filter by label"
-                        class="rounded border bg-gray-50 px-2 py-1 dark:bg-zinc-900" />
-                    <input type="text" v-model="filterTags" placeholder="Filter by tags"
-                        class="rounded border bg-gray-50 px-2 py-1 dark:bg-zinc-900" />
-                    <button class="rounded-md bg-green-600 px-4 py-2 text-white transition hover:bg-green-700"
-                        @click="showProjectForm = true">
+                    <input
+                        type="text"
+                        v-model="filterLabel"
+                        placeholder="Filter by label"
+                        class="rounded border bg-gray-50 px-2 py-1 dark:bg-zinc-900"
+                    />
+                    <input
+                        type="text"
+                        v-model="filterTags"
+                        placeholder="Filter by tags"
+                        class="rounded border bg-gray-50 px-2 py-1 dark:bg-zinc-900"
+                    />
+                    <button class="rounded-md bg-green-600 px-4 py-2 text-white transition hover:bg-green-700" @click="showProjectForm = true">
                         Create Project
                     </button>
                 </div>
             </div>
 
-            <div class="overflow-x-auto rounded-lg border-2 border-white bg-[#171717] shadow dark:bg-[#171717]"
-                :style="`min-height: ${ITEMS_PER_PAGE * 56}px`">
+            <div
+                class="overflow-x-auto rounded-lg border-2 border-white bg-[#171717] shadow dark:bg-[#171717]"
+                :style="`min-height: ${ITEMS_PER_PAGE * 56}px`"
+            >
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead>
                         <tr>
                             <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">
                                 <div class="flex items-center gap-2">
-                                    <button @click="cycleSortDirection"
+                                    <button
+                                        @click="cycleSortDirection"
                                         class="cursor-pointer text-xs font-semibold text-gray-700 hover:text-blue-500"
                                         :class="{
                                             'text-blue-500': sortDirection !== 'id',
-                                        }" :title="sortDirection === 'id'
+                                        }"
+                                        :title="
+                                            sortDirection === 'id'
                                                 ? 'Sort by ID (default)'
                                                 : sortDirection === 'asc'
-                                                    ? 'Sort by Label (A-Z)'
-                                                    : 'Sort by Label (Z-A)'
-                                            ">
+                                                  ? 'Sort by Label (A-Z)'
+                                                  : 'Sort by Label (Z-A)'
+                                        "
+                                    >
                                         Label {{ sortDirection === 'id' ? '•' : sortDirection === 'asc' ? '▲' : '▼' }}
                                     </button>
                                 </div>
@@ -343,8 +361,7 @@ function save() {
                         <tr v-for="project in paginatedProjects" :key="project.id">
                             <td class="px-4 py-2">{{ project.label }}</td>
                             <td class="px-4 py-2">
-                                <span v-for="tag in project.tags || []" :key="tag"
-                                    class="mr-1 inline-block rounded bg-[#262626] px-2 py-1 text-xs">
+                                <span v-for="tag in project.tags || []" :key="tag" class="mr-1 inline-block rounded bg-[#262626] px-2 py-1 text-xs">
                                     {{ tag }}
                                 </span>
                             </td>
@@ -357,20 +374,23 @@ function save() {
                                     >
                                         Edit
                                     </button>-->
-                                    <button @click="deleteProject(project.id)"
-                                        class="rounded bg-red-500 px-2 py-1 text-xs text-white transition hover:bg-red-600">
+                                    <button
+                                        @click="deleteProject(project.id)"
+                                        class="rounded bg-red-500 px-2 py-1 text-xs text-white transition hover:bg-red-600"
+                                    >
                                         Delete
                                     </button>
-                                    <a :href="`/projects/${project.id}`"
-                                        class="rounded bg-blue-500 px-2 py-1 text-center text-xs text-white transition hover:bg-blue-600">
+                                    <a
+                                        :href="`/projects/${project.id}`"
+                                        class="rounded bg-blue-500 px-2 py-1 text-center text-xs text-white transition hover:bg-blue-600"
+                                    >
                                         Details
                                     </a>
                                 </div>
                             </td>
                         </tr>
                         <!-- Add empty rows to maintain fixed height -->
-                        <tr v-for="n in Math.max(0, ITEMS_PER_PAGE - paginatedProjects.length)" :key="'empty-' + n"
-                            class="h-14">
+                        <tr v-for="n in Math.max(0, ITEMS_PER_PAGE - paginatedProjects.length)" :key="'empty-' + n" class="h-14">
                             <td class="px-4 py-2" colspan="3">&nbsp;</td>
                         </tr>
                         <tr v-if="paginatedProjects.length === 0">
@@ -382,21 +402,25 @@ function save() {
 
             <!-- Pagination Controls - Outside table container -->
             <div v-if="totalPages > 1" class="mt-4 flex items-center justify-center gap-2 py-4">
-                <button @click="currentPage = Math.max(1, currentPage - 1)" :disabled="currentPage === 1"
-                    class="rounded border bg-gray-100 px-3 py-1 text-gray-700 disabled:opacity-50 dark:bg-gray-700 dark:text-gray-200">
+                <button
+                    @click="currentPage = Math.max(1, currentPage - 1)"
+                    :disabled="currentPage === 1"
+                    class="rounded border bg-gray-100 px-3 py-1 text-gray-700 disabled:opacity-50 dark:bg-gray-700 dark:text-gray-200"
+                >
                     Prev
                 </button>
                 <span class="mx-2 text-sm"> Page {{ currentPage }} of {{ totalPages }} </span>
-                <button @click="currentPage = Math.min(totalPages, currentPage + 1)"
+                <button
+                    @click="currentPage = Math.min(totalPages, currentPage + 1)"
                     :disabled="currentPage === totalPages"
-                    class="rounded border bg-gray-100 px-3 py-1 text-gray-700 disabled:opacity-50 dark:bg-gray-700 dark:text-gray-200">
+                    class="rounded border bg-gray-100 px-3 py-1 text-gray-700 disabled:opacity-50 dark:bg-gray-700 dark:text-gray-200"
+                >
                     Next
                 </button>
             </div>
 
             <!-- Edit Modal -->
-            <div v-if="showEditModal"
-                class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
+            <div v-if="showEditModal" class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
                 <div class="w-full max-w-md rounded-lg bg-white p-6 dark:bg-gray-800">
                     <h3 class="mb-4 text-lg font-semibold">Edit Project</h3>
 
@@ -407,23 +431,26 @@ function save() {
 
                     <div class="mb-6">
                         <label class="mb-2 block text-sm font-medium">Tags (comma separated)</label>
-                        <input :value="editForm.tags.join(', ')" @input="
-                            editForm.tags = $event.target.value
-                                .split(',')
-                                .map((t) => t.trim())
-                                .filter((t) => t)
-                            " type="text" class="w-full rounded border px-3 py-2" placeholder="tag1, tag2, tag3" />
+                        <input
+                            :value="editForm.tags.join(', ')"
+                            @input="
+                                editForm.tags = $event.target.value
+                                    .split(',')
+                                    .map((t) => t.trim())
+                                    .filter((t) => t)
+                            "
+                            type="text"
+                            class="w-full rounded border px-3 py-2"
+                            placeholder="tag1, tag2, tag3"
+                        />
                     </div>
 
                     <div class="flex justify-end gap-2">
-                        <button @click="closeEditModal"
-                            class="rounded border px-4 py-2 hover:bg-gray-100">Cancel</button>
-                        <button @click="updateProject"
-                            class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">Update</button>
+                        <button @click="closeEditModal" class="rounded border px-4 py-2 hover:bg-gray-100">Cancel</button>
+                        <button @click="updateProject" class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">Update</button>
                     </div>
                 </div>
             </div>
-
         </div>
     </AppLayout>
 </template>

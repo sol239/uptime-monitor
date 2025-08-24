@@ -43,7 +43,7 @@ class Monitor extends Model
     protected $fillable = [
         'project_id',
         'label',
-        'periodicity', 
+        'periodicity',
         'monitor_type',
         'badge_label',
         'status',
@@ -75,7 +75,7 @@ class Monitor extends Model
      */
     public function setPeriodicityAttribute($value)
     {
-        $this->attributes['periodicity'] = max(5, min(300, (int)$value));
+        $this->attributes['periodicity'] = max(5, min(300, (int) $value));
     }
 
     /**
