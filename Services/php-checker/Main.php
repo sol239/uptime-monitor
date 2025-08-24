@@ -15,7 +15,8 @@ if (file_exists($envPath)) {
     }
 }
 
-date_default_timezone_set('Europe/Prague');
+// Set timezone to UTC for all date/time operations
+date_default_timezone_set('UTC');
 
 class MonitorChecker
 {
@@ -122,11 +123,11 @@ class MonitorChecker
         ');
         $stmt->execute([
             'monitor_id' => $pingMonitor['id'],
-            'started_at' => date('Y-m-d H:i:s', $start),
+            'started_at' => gmdate('Y-m-d H:i:s', $start),
             'status' => $status,
             'response_time_ms' => $responseTime,
-            'created_at' => date('Y-m-d H:i:s'),
-            'updated_at' => date('Y-m-d H:i:s'),
+            'created_at' => gmdate('Y-m-d H:i:s'),
+            'updated_at' => gmdate('Y-m-d H:i:s'),
         ]);
 
         echo "Log saved for monitor ID {$pingMonitor['id']}.\n";
@@ -193,11 +194,11 @@ class MonitorChecker
         ');
         $stmt->execute([
             'monitor_id' => $websiteMonitor['id'],
-            'started_at' => date('Y-m-d H:i:s', $start),
+            'started_at' => gmdate('Y-m-d H:i:s', $start),
             'status' => $status,
             'response_time_ms' => $responseTime,
-            'created_at' => date('Y-m-d H:i:s'),
-            'updated_at' => date('Y-m-d H:i:s'),
+            'created_at' => gmdate('Y-m-d H:i:s'),
+            'updated_at' => gmdate('Y-m-d H:i:s'),
         ]);
 
         echo "Log saved for website monitor ID {$websiteMonitor['id']}.\n";
@@ -205,7 +206,7 @@ class MonitorChecker
 
     public function initializeMonitorChecks(): void
     {
-        $currentTime = date('Y-m-d H:i:s');
+        $currentTime = gmdate('Y-m-d H:i:s');
         echo "=== Initialization started at: {$currentTime} ===\n";
 
         foreach ($this->pingMonitors as $pingMonitor) {
@@ -242,7 +243,7 @@ class MonitorChecker
             echo "Website Monitor [{$websiteMonitor['label']}] next check scheduled at: {$nextCheckTime}\n";
         }
 
-        echo '=== Initialization completed at: '.date('Y-m-d H:i:s')." ===\n";
+        echo '=== Initialization completed at: '.gmdate('Y-m-d H:i:s')." ===\n";
     }
 
     /**
@@ -257,12 +258,12 @@ class MonitorChecker
         $periodicity = isset($monitor['periodicity']) ? (int) $monitor['periodicity'] : 300; // default 5 minutes (300 seconds)
 
         if ($latestStartedAt) {
-            $nextCheckTimestamp = strtotime($latestStartedAt) + $periodicity; // periodicity in seconds
+            $nextCheckTimestamp = strtotime($latestStartedAt . ' UTC') + $periodicity;
 
-            return date('Y-m-d H:i:s', $nextCheckTimestamp);
+            return gmdate('Y-m-d H:i:s', $nextCheckTimestamp);
         } else {
             // If no log, schedule immediately
-            return date('Y-m-d H:i:s');
+            return gmdate('Y-m-d H:i:s');
         }
     }
 
@@ -303,7 +304,7 @@ class MonitorChecker
             foreach ($this->monitorNextChecks as $i => $mc) {
                 if ($mc['monitor']['id'] == $monitorId) {
                     $this->monitorNextChecks[$i]['monitor'] = $monitor;
-                    $this->monitorNextChecks[$i]['nextCheckTime'] = date('Y-m-d H:i:s'); // run immediately
+                    $this->monitorNextChecks[$i]['nextCheckTime'] = gmdate('Y-m-d H:i:s'); // run immediately
                     break;
                 }
             }
@@ -340,12 +341,12 @@ class MonitorChecker
             $this->checkMonitorUpdates();
 
             foreach ($this->monitorNextChecks as $index => $monitorCheck) {
-                $nextCheckTimestamp = strtotime($monitorCheck['nextCheckTime']);
+                $nextCheckTimestamp = strtotime($monitorCheck['nextCheckTime'] . ' UTC');
                 $x = $currentTime >= $nextCheckTimestamp;
                 // echo "Current: " . date('Y-m-d H:i:s', $currentTime) . " - Next Check: " . $monitorCheck['nextCheckTime'] . " - " . ($x ? 'true' : 'false') . "\n";
                 if ($currentTime >= $nextCheckTimestamp) {
                     $monitor = $monitorCheck['monitor'];
-                    echo "Running check for monitor ID {$monitor['id']} at ".date('Y-m-d H:i:s')."\n";
+                    echo "Running check for monitor ID {$monitor['id']} at ".gmdate('Y-m-d H:i:s')."\n";
 
                     if ($monitor['monitor_type'] === 'ping') {
                         $this->runPingMonitorCheck($monitor);
