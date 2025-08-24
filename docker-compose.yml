@@ -30,6 +30,7 @@ services:
       interval: 10s
       retries: 10
       start_period: 20s
+    
 
   mysql:
     image: mysql:8.0
@@ -45,11 +46,14 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
-      timeout: 20s
-      retries: 10
-      interval: 10s
-      start_period: 40s
+      test: [
+        "CMD-SHELL",
+        "mysql -uroot -p${DB_PASSWORD} -e 'USE ${DB_DATABASE};' || exit 1"
+      ]
+      timeout: 30s
+      retries: 20
+      interval: 15s
+      start_period: 60s
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
@@ -62,15 +66,15 @@ services:
     ports:
       - 8080:80
     depends_on:
-      - mysql
+       mysql:
+        condition: service_healthy
 
-  php-checker:
+  checker-service:
     build:
       context: ./services/php-checker
       dockerfile: Dockerfile
     container_name: php-checker
     working_dir: /app
-    profiles: ["php"]
     volumes:
       - ./services/php-checker:/app:cached
     environment:
@@ -86,27 +90,6 @@ services:
       app:
         condition: service_healthy
     command: php main.php
-  python-checker:
-    build:
-      context: ./services/python-checker
-      dockerfile: Dockerfile
-    container_name: python-checker
-    working_dir: /app
-    profiles: ["python"]
-    volumes:
-      - ./services/python-checker:/app:cached
-    environment:
-      DB_CONNECTION: ${DB_CONNECTION}
-      DB_HOST: mysql
-      DB_PORT: ${DB_PORT}
-      DB_DATABASE: ${DB_DATABASE}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
-    depends_on:
-      - app
-      - mysql
-    command: python main.py
-
 
 volumes:
   mysql_data:

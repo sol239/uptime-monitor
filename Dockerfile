@@ -30,14 +30,13 @@ RUN composer install
 #RUN npm install
 #RUN npm run build
 
+# Expose port for artisan serve
+EXPOSE 8000
+
 # Copy entrypoint script and set permissions
 COPY .docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Expose port for artisan serve
-EXPOSE 8000
-
-# Set entrypoint
 ENTRYPOINT ["/entrypoint.sh"]
 
 # Command to run Laravel backend
