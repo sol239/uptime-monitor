@@ -161,16 +161,23 @@ const calendarData = computed(() => {
 });
 
 /**
- * Calendar days for last 3 months
+ * Calendar days for selected range or last 90 days
  * @returns {Array<any>}
  */
 const calendarDays = computed(() => {
+    let startDate, endDate;
+    if (listFilters.startDate && listFilters.endDate) {
+        startDate = new Date(listFilters.startDate);
+        endDate = new Date(listFilters.endDate);
+    } else {
+        endDate = new Date();
+        endDate.setHours(23,59,59,999); // ensure today is included
+        startDate = new Date(endDate);
+        startDate.setDate(endDate.getDate() - 89); // last 90 days
+    }
     const days = [];
-    const today = new Date();
-    today.setDate(today.getDate() + 1);
-    const threeMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 2, 1);
-    const currentDate = new Date(threeMonthsAgo);
-    while (currentDate <= today) {
+    const currentDate = new Date(startDate);
+    while (currentDate <= endDate) { // include endDate itself
         const dateStr = currentDate.toISOString().split('T')[0];
         const summary = calendarData.value[dateStr];
         let color = '#2d3748';
@@ -188,9 +195,8 @@ const calendarDays = computed(() => {
                 status = `Issues (${summary.failed} failed / ${summary.total} total)`;
             }
         }
-        const d = new Date(currentDate);
         days.push({
-            date: d,
+            date: new Date(currentDate),
             dateStr,
             color,
             status,
@@ -662,10 +668,20 @@ onUnmounted(() => {
                             </div>
                             <!-- Date filters for all modes -->
                             <div class="mb-3 flex flex-wrap items-end gap-2">
-                                <div>
+                                <div class="flex items-center gap-1">
                                     <label class="mb-1 block text-xs font-semibold">Start Date</label>
                                     <input type="date" v-model="listFilters.startDate"
                                         class="rounded border bg-gray-50 px-2 py-1 text-sm dark:bg-zinc-900" />
+                                    <!-- Reset button -->
+                                    <button type="button" @click="listFilters.startDate = ''; listFilters.endDate = ''"
+                                        class="ml-1 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+                                        title="Reset date filters">
+                                        <!-- Simple reset SVG icon -->
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M4 4v5h.582M20 20v-5h-.581M5.5 8A7.003 7.003 0 0112 5c3.866 0 7 3.134 7 7 0 1.657-.672 3.156-1.764 4.236M18.5 16A7.003 7.003 0 0112 19c-3.866 0-7-3.134-7-7 0-1.657.672-3.156 1.764-4.236"/>
+                                        </svg>
+                                    </button>
                                 </div>
                                 <div>
                                     <label class="mb-1 block text-xs font-semibold">End Date</label>

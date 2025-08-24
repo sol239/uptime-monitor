@@ -31,10 +31,7 @@ cd uptime-monitor
 cp .env.example .env
 
 # Python based monitor checking service 
-docker compose --profile python build
-
-# Php based monitor checking service 
-docker compose --profile php build
+docker compose build
 ```
 
 ### Without Docker Compose
@@ -77,11 +74,12 @@ pip install -r services/python-checker/requirements.txt
 ### With Docker Compose 🐳
 
 ```shell
-# Python Monitor Service
-docker-compose --profile python up -d
+# In docker-compose.yml you can set whether checker-service will use PHP/Python.
+# You can change it by modifying path to PHP/Python Dockerfile
+docker compose up
 
-# Php Monitor Service
-docker-compose --profile php up -d
+# You can optionally seed the db for unittesting and UI tests.
+docker compose exec app php artisan db:seed
 ```
 
 ### Without Docker Compose
@@ -90,16 +88,13 @@ docker-compose --profile php up -d
 # Run the Laravel development server
 php artisan serve
 
-# Run the front end
+# Run the frontend
 npm run dev
 
-# Or you can run 'composer run dev'
- for both.
-
-# PHP Monitor Service
+# a) PHP Monitor Service
 php services/php-checker/Main.php
 
-# Python Monitor service
+# b) Python Monitor Service
 python services/python-checker/Main.py
 ```
 

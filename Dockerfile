@@ -23,12 +23,12 @@ COPY . .
 RUN composer install
 
 # Install Node.js and npm
-#RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-#    && apt-get install -y nodejs
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y nodejs
 
 # Install frontend dependencies and build
-#RUN npm install
-#RUN npm run build
+RUN npm install
+RUN npm run build
 
 # Expose port for artisan serve
 EXPOSE 8000
