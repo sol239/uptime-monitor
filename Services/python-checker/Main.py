@@ -16,7 +16,7 @@ import time
 import json
 import socket
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass
 from pathlib import Path
@@ -448,7 +448,7 @@ class MonitorChecker:
         return valid_results
 
     async def _save_result_async(self, monitor: Monitor, result: MonitorResult):
-        """Save result to database asynchronously"""
+        """Save result to database asynchronously (using UTC)"""
 
         def _save_result_sync():
             if not self.db_pool:
@@ -457,6 +457,7 @@ class MonitorChecker:
             conn = self.db_pool.get_connection()
             try:
                 cursor = conn.cursor()
+                utc_now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
                 cursor.execute(
                     """
                     INSERT INTO monitor_logs 
@@ -465,11 +466,11 @@ class MonitorChecker:
                 """,
                     (
                         monitor.id,
-                        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        utc_now,
                         result.status,
                         result.response_time,
-                        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        utc_now,
+                        utc_now,
                     ),
                 )
             finally:
@@ -479,7 +480,7 @@ class MonitorChecker:
         await asyncio.get_event_loop().run_in_executor(self.executor, _save_result_sync)
 
     async def _calculate_next_check_time(self, monitor: Monitor) -> datetime:
-        """Calculate next check time based on last check and periodicity"""
+        """Calculate next check time based on last check and periodicity (UTC)"""
 
         def _calculate_next_check_time_sync():
             if not self.db_pool:
@@ -509,7 +510,7 @@ class MonitorChecker:
                 last_check_dt = datetime.strptime(str(last_check), "%Y-%m-%d %H:%M:%S")
                 return last_check_dt + timedelta(seconds=monitor.periodicity)
         else:
-            return datetime.now()
+            return datetime.now(UTC)
 
     async def initialize_monitors(self):
         """Initialize all monitors with enhanced batch processing"""
@@ -669,16 +670,24 @@ class MonitorChecker:
         """Enhanced monitoring loop with better performance tracking"""
         logger.info("Starting monitoring loop...")
 
+
         while True:
-            current_time = datetime.now()
+            current_time = datetime.now(UTC)
             due_ping_monitors = []
             due_website_monitors = []
 
             # Collect due monitors
             for i, monitor_check in enumerate(self.monitor_next_checks):
-                if current_time >= monitor_check["next_check_time"]:
+                next_check_time = monitor_check["next_check_time"]
+                # Ensure next_check_time is UTC-aware
+                if isinstance(next_check_time, datetime):
+                    if next_check_time.tzinfo is None:
+                        next_check_time = next_check_time.replace(tzinfo=UTC)
+                else:
+                    # If not a datetime, skip
+                    continue
+                if current_time >= next_check_time:
                     monitor = monitor_check["monitor"]
-
                     if monitor.monitor_type == "ping":
                         due_ping_monitors.append((i, monitor))
                     elif monitor.monitor_type == "website":
@@ -820,11 +829,6 @@ async def main():
 
 if __name__ == "__main__":
     # Set up asyncio event loop with optimizations
-    if hasattr(asyncio, "WindowsSelectorEventLoopPolicy"):
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-
-    # Run the main function
-    asyncio.run(main())
     if hasattr(asyncio, "WindowsSelectorEventLoopPolicy"):
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
